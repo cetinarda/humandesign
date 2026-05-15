@@ -12,7 +12,7 @@ import { sunLongitude, moonLongitude, julianDay } from '../utils/ephemeris';
 import { longitudeToGate } from '../utils/humanDesign';
 
 interface Props {
-  onNavigate: (t: 'home' | 'chart' | 'profile') => void;
+  onNavigate: (t: 'home' | 'chart' | 'report' | 'profile') => void;
 }
 
 function greetingByHour(): string {

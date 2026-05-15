@@ -14,7 +14,7 @@ import { GATES } from '../data/gates';
 import { getActivationsByCenter, planetLabel } from '../utils/humanDesign';
 
 interface Props {
-  onNavigate: (t: 'home' | 'chart' | 'profile') => void;
+  onNavigate: (t: 'home' | 'chart' | 'report' | 'profile') => void;
 }
 
 type Tab = 'overview' | 'centers' | 'gates' | 'planets';

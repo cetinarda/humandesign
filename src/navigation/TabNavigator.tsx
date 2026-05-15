@@ -9,13 +9,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme/colors';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ChartScreen } from '../screens/ChartScreen';
+import { ReportScreen } from '../screens/ReportScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 
-type Tab = 'home' | 'chart' | 'profile';
+export type Tab = 'home' | 'chart' | 'report' | 'profile';
 
 const TABS: { key: Tab; label: string; emoji: string; activeColor: string }[] = [
   { key: 'home', label: 'Bugün', emoji: '🌙', activeColor: Colors.gold },
   { key: 'chart', label: 'Harita', emoji: '✦', activeColor: Colors.purple },
+  { key: 'report', label: 'Rapor', emoji: '📜', activeColor: Colors.tealSoft },
   { key: 'profile', label: 'Profil', emoji: '👤', activeColor: Colors.teal },
 ];
 
@@ -26,9 +28,11 @@ export function TabNavigator() {
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
-        return <HomeScreen onNavigate={(t) => setActiveTab(t)} />;
+        return <HomeScreen onNavigate={(t) => setActiveTab(t as Tab)} />;
       case 'chart':
-        return <ChartScreen onNavigate={(t) => setActiveTab(t)} />;
+        return <ChartScreen onNavigate={(t) => setActiveTab(t as Tab)} />;
+      case 'report':
+        return <ReportScreen onNavigate={(t) => setActiveTab(t as Tab)} />;
       case 'profile':
         return <ProfileScreen />;
     }
