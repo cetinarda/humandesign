@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Sakin Tasarım",
+    "slug": "sakin-tasarim",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0B14"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "life.sakin.tasarim"
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "life.sakin.tasarim"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
