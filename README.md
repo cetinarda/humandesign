@@ -36,6 +36,57 @@ npm run android    # Android emulator
 - Design zamanı: Personality Sun pozisyonundan 88° geride iteratif çözüm
 - Gate çark sırası ekliptik 302° (Aquarius 2°) noktasından başlar
 
+## Submission
+
+`store/` klasörü App Store / Google Play / web yayını için hazır metinleri içerir.
+Hepsi tek başına kullanılabilecek şekilde yazıldı — düzenlemeden kopyala-yapıştır
+yapabilirsin.
+
+### Dosya haritası
+
+| Dosya | Nereye gider |
+| --- | --- |
+| `store/privacy-policy-tr.md` | `sakin.life/tasarim/gizlilik` sayfasına yapıştır. KVKK + KVK çerçevesi. |
+| `store/privacy-policy-en.md` | `sakin.life/tasarim/privacy` sayfası (EN). GDPR + CCPA dili. |
+| `store/terms-of-use-tr.md` | `sakin.life/tasarim/kosullar` sayfasına yapıştır. |
+| `store/terms-of-use-en.md` | `sakin.life/tasarim/terms` sayfası (EN). |
+| `store/app-store-listing-tr.md` | App Store Connect → tr-TR yerel ayarı → her alanı tek tek yapıştır. |
+| `store/app-store-listing-en.md` | App Store Connect → en-US yerel ayarı. |
+| `store/app-review-notes.md` | App Store Connect → App Review Information → **Notes** alanı. İngilizce. |
+| `store/age-rating-questionnaire.md` | App Information → Age Rating → Edit. Cevapları soru başına eşle. |
+| `store/privacy-nutrition-label.md` | App Information → App Privacy. Sonuç: **Data Not Collected**. |
+
+### Yayın akışı
+
+1. **Site:** `privacy-policy-*.md` ve `terms-of-use-*.md` dosyalarını sakin.life'a
+   yayınla. URL'ler `https://sakin.life/tasarim/gizlilik` ve
+   `https://sakin.life/tasarim/kosullar`.
+2. **Apple App Store Connect:**
+   - App Information → Localizable bilgiler → tr-TR ve en-US dolduruluyor
+     (`app-store-listing-*.md`'den).
+   - Pricing & Availability → ücretsiz, IAP yok.
+   - App Privacy → `privacy-nutrition-label.md`'deki seçimleri yap, **Data Not
+     Collected** yayınla.
+   - App Information → Age Rating → `age-rating-questionnaire.md`'deki cevapları
+     gir, 17+ çıkması beklenir.
+   - App Review Information → Notes alanına `app-review-notes.md` içeriğini
+     yapıştır. Sign-in gerekmez; test doğum verisini not içinde verdik.
+3. **Google Play Console:** aynı metinler, Data Safety formuna
+   `privacy-nutrition-label.md` mantığıyla "no data collected" işaretle, IARC
+   sorularına aynı cevaplar.
+
+### Bayrak (yapmadan submit etme)
+
+- [ ] `info@sakin.life` ve `privacy@sakin.life` adresleri yanıt veriyor
+- [ ] `sakin.life/tasarim/gizlilik` ve `sakin.life/destek` URL'leri canlı
+- [ ] Uygulama içinde görünür disclaimer var ("eğitim ve kişisel keşif amaçlıdır,
+      tıbbi/psikolojik tavsiye değildir")
+- [ ] Ekran görüntüleri ve listing copy'sinde **fal / kehanet / horoscope /
+      fortune / predict / future / destiny** kelimeleri **yok**
+- [ ] Bundle id: `life.sakin.tasarim`
+- [ ] Privacy Nutrition Label "Data Not Collected" işaretli
+- [ ] Age Rating 17+ olarak çıkıyor
+
 ## Lisans
 
 Özel/araştırma kullanımı.

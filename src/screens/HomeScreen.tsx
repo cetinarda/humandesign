@@ -54,6 +54,8 @@ export function HomeScreen({ onNavigate }: Props) {
           style={styles.emptyCTA}
           onPress={() => onNavigate('profile')}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Profil oluştur"
         >
           <Text style={styles.emptyCTAText}>Profili Oluştur →</Text>
         </TouchableOpacity>
@@ -87,6 +89,8 @@ export function HomeScreen({ onNavigate }: Props) {
           style={styles.heroCard}
           onPress={() => onNavigate('chart')}
           activeOpacity={0.9}
+          accessibilityRole="button"
+          accessibilityLabel={`${chart.type} haritana git`}
         >
           <Text style={styles.heroEmoji}>{t.emoji}</Text>
           <Text style={styles.heroLabel}>SENİN TASARIMIN</Text>

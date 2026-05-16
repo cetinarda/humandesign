@@ -197,6 +197,14 @@ export function ReportScreen({ onNavigate }: Props) {
         Haftalık tema, dikkat / bırak / sahiplen blokları, kapı ve pratik her hafta değişir.
         Uyumluluk, beden dinleme ve uyarı işaretleri sabit kalır.
       </Text>
+
+      <View style={styles.disclaimerBox}>
+        <Text style={styles.disclaimerText}>
+          Sakin Tasarım eğitim ve kişisel keşif amaçlıdır. İçerik tıbbi tanı,
+          psikolojik terapi, finansal danışmanlık veya kehanet niteliği taşımaz.
+          Sağlık, ruh sağlığı ve yaşamsal kararlar için profesyonel destek al.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -394,5 +402,19 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs, color: Colors.textMuted,
     textAlign: 'center', marginTop: Spacing.lg,
     lineHeight: Typography.size.xs * 1.6, fontStyle: 'italic',
+  },
+  disclaimerBox: {
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.emberSoft,
+  },
+  disclaimerText: {
+    fontSize: Typography.size.xs,
+    color: Colors.textSecondary,
+    lineHeight: Typography.size.xs * 1.7,
+    fontStyle: 'italic',
   },
 });

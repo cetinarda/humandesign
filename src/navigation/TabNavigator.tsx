@@ -11,6 +11,8 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ChartScreen } from '../screens/ChartScreen';
 import { ReportScreen } from '../screens/ReportScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { useTasarimStore } from '../store/useStore';
 
 export type Tab = 'home' | 'chart' | 'report' | 'profile';
 
@@ -24,6 +26,15 @@ const TABS: { key: Tab; label: string; emoji: string; activeColor: string }[] = 
 export function TabNavigator() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const insets = useSafeAreaInsets();
+  const { isOnboarded, isLoading, setOnboarded } = useTasarimStore();
+
+  if (isLoading) {
+    return <View style={[styles.container, { backgroundColor: Colors.background }]} />;
+  }
+
+  if (!isOnboarded) {
+    return <OnboardingScreen onAccept={() => setOnboarded()} />;
+  }
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -51,6 +62,9 @@ export function TabNavigator() {
               style={styles.tabItem}
               onPress={() => setActiveTab(tab.key)}
               activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${tab.label} sekmesi`}
             >
               <View style={[styles.tabIndicator, isActive && { backgroundColor: tab.activeColor }]} />
               <Text style={[styles.tabEmoji, !isActive && styles.tabEmojiInactive]}>

@@ -1,8 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  TextInput, Alert,
+  TextInput, Alert, Linking, Platform,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+const PRIVACY_URL = 'https://sakin.life/tasarim/gizlilik';
+const TERMS_URL = 'https://sakin.life/tasarim/kosullar';
+const SUPPORT_EMAIL = 'info@sakin.life';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme/colors';
 import { useTasarimStore } from '../store/useStore';
@@ -150,9 +155,36 @@ export function ProfileScreen() {
         <Text style={styles.addBtnText}>+ Yeni Profil Ekle</Text>
       </TouchableOpacity>
 
+      <View style={styles.legalLinks}>
+        <TouchableOpacity
+          onPress={() => Linking.openURL(PRIVACY_URL)}
+          accessibilityRole="link"
+          accessibilityLabel="Gizlilik politikası"
+        >
+          <Text style={styles.legalLink}>Gizlilik Politikası</Text>
+        </TouchableOpacity>
+        <Text style={styles.legalSep}>·</Text>
+        <TouchableOpacity
+          onPress={() => Linking.openURL(TERMS_URL)}
+          accessibilityRole="link"
+          accessibilityLabel="Kullanım koşulları"
+        >
+          <Text style={styles.legalLink}>Koşullar</Text>
+        </TouchableOpacity>
+        <Text style={styles.legalSep}>·</Text>
+        <TouchableOpacity
+          onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Sakin%20Tasarım%20Geri%20Bildirim`)}
+          accessibilityRole="link"
+          accessibilityLabel="Destek e-postası"
+        >
+          <Text style={styles.legalLink}>Destek</Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.footerNote}>
-        Bilgilerin yalnızca cihazında saklanır. Hesaplamalar lokal olarak yapılır;
-        doğum verin sunucuya gönderilmez.
+        Bilgilerin yalnızca cihazında saklanır. Hesaplamalar lokal yapılır;
+        doğum verin sunucuya gönderilmez. Sakin Tasarım eğitim ve kişisel keşif
+        amaçlıdır; tıbbi, psikolojik veya finansal tavsiye değildir.
       </Text>
     </ScrollView>
   );
@@ -167,6 +199,20 @@ function InfoRow({ k, v }: { k: string; v: string }) {
   );
 }
 
+const isWeb = Platform.OS === 'web';
+
+function pad(n: number) {
+  return String(n).padStart(2, '0');
+}
+
+function fmtDate(d: Date) {
+  return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtTime(d: Date) {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function NewProfileForm({
   onCancel,
   onSave,
@@ -176,11 +222,16 @@ function NewProfileForm({
 }) {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
-  const [hour, setHour] = useState('');
-  const [minute, setMinute] = useState('');
+
+  // Native: birleşik Date; Web: ayrı text inputlar
+  const [birth, setBirth] = useState<Date | null>(null);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
+
+  // Web fallback için
+  const [dateStr, setDateStr] = useState('');   // YYYY-MM-DD
+  const [timeStr, setTimeStr] = useState('');   // HH:MM
+
   const [cityQuery, setCityQuery] = useState('');
   const [city, setCity] = useState<City | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -191,15 +242,41 @@ function NewProfileForm({
     [cityQuery, city]
   );
 
+  function onDateChange(_event: DateTimePickerEvent, selected?: Date) {
+    if (Platform.OS === 'android') setDateOpen(false);
+    if (selected) {
+      const next = birth ? new Date(birth) : new Date(1990, 5, 15, 12, 0);
+      next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      setBirth(next);
+    }
+  }
+
+  function onTimeChange(_event: DateTimePickerEvent, selected?: Date) {
+    if (Platform.OS === 'android') setTimeOpen(false);
+    if (selected) {
+      const next = birth ? new Date(birth) : new Date(1990, 5, 15, 12, 0);
+      next.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
+      setBirth(next);
+    }
+  }
+
   function validate(): string | null {
     if (!name.trim()) return 'Lütfen adını gir.';
-    const d = parseInt(day, 10), m = parseInt(month, 10), y = parseInt(year, 10);
-    if (isNaN(d) || d < 1 || d > 31) return 'Gün 1-31 arasında olmalı.';
-    if (isNaN(m) || m < 1 || m > 12) return 'Ay 1-12 arasında olmalı.';
-    if (isNaN(y) || y < 1900 || y > new Date().getFullYear()) return 'Geçerli bir yıl gir.';
-    const h = parseInt(hour, 10), mi = parseInt(minute, 10);
-    if (isNaN(h) || h < 0 || h > 23) return 'Saat 0-23 arasında olmalı.';
-    if (isNaN(mi) || mi < 0 || mi > 59) return 'Dakika 0-59 arasında olmalı.';
+    let d: string, t: string;
+    if (isWeb) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 'Tarihi YYYY-AA-GG formatında gir.';
+      if (!/^\d{2}:\d{2}$/.test(timeStr)) return 'Saati SS:DD formatında gir.';
+      d = dateStr; t = timeStr;
+      const [y, mo, day] = d.split('-').map(Number);
+      if (y < 1900 || y > new Date().getFullYear()) return 'Geçerli bir yıl gir.';
+      if (mo < 1 || mo > 12) return 'Ay 1-12 arasında olmalı.';
+      if (day < 1 || day > 31) return 'Gün 1-31 arasında olmalı.';
+      const [h, mi] = t.split(':').map(Number);
+      if (h < 0 || h > 23) return 'Saat 0-23 arasında olmalı.';
+      if (mi < 0 || mi > 59) return 'Dakika 0-59 arasında olmalı.';
+    } else {
+      if (!birth) return 'Lütfen doğum tarihi ve saatini seç.';
+    }
     if (!city) return 'Lütfen bir doğum şehri seç.';
     return null;
   }
@@ -209,8 +286,15 @@ function NewProfileForm({
     if (err) { setError(err); return; }
     setError(null);
     setSubmitting(true);
-    const dStr = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const tStr = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+    let dStr: string, tStr: string;
+    if (isWeb) {
+      dStr = dateStr;
+      tStr = timeStr;
+    } else {
+      const b = birth!;
+      dStr = `${b.getFullYear()}-${pad(b.getMonth() + 1)}-${pad(b.getDate())}`;
+      tStr = `${pad(b.getHours())}:${pad(b.getMinutes())}`;
+    }
     try {
       await onSave(name.trim(), dStr, tStr, city!);
     } finally {
@@ -240,58 +324,74 @@ function NewProfileForm({
       />
 
       <Text style={styles.label}>Doğum Tarihi</Text>
-      <View style={styles.row3}>
+      {isWeb ? (
         <TextInput
-          style={[styles.input, styles.row3Item]}
-          placeholder="GG"
+          style={styles.input}
+          placeholder="YYYY-AA-GG (ör. 1990-06-15)"
           placeholderTextColor={Colors.textMuted}
-          value={day}
-          onChangeText={t => setDay(t.replace(/\D/g, '').slice(0, 2))}
-          keyboardType="number-pad"
-          maxLength={2}
+          value={dateStr}
+          onChangeText={setDateStr}
+          accessibilityLabel="Doğum tarihi"
         />
-        <TextInput
-          style={[styles.input, styles.row3Item]}
-          placeholder="AA"
-          placeholderTextColor={Colors.textMuted}
-          value={month}
-          onChangeText={t => setMonth(t.replace(/\D/g, '').slice(0, 2))}
-          keyboardType="number-pad"
-          maxLength={2}
-        />
-        <TextInput
-          style={[styles.input, styles.row3Item, { flex: 1.5 }]}
-          placeholder="YYYY"
-          placeholderTextColor={Colors.textMuted}
-          value={year}
-          onChangeText={t => setYear(t.replace(/\D/g, '').slice(0, 4))}
-          keyboardType="number-pad"
-          maxLength={4}
-        />
-      </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.pickerRow}
+          onPress={() => setDateOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Doğum tarihi seç"
+        >
+          <Text style={[styles.pickerText, !birth && styles.pickerPlaceholder]}>
+            {birth ? fmtDate(birth) : 'Tarih seç'}
+          </Text>
+          <Text style={styles.pickerChev}>›</Text>
+        </TouchableOpacity>
+      )}
 
-      <Text style={styles.label}>Doğum Saati (24 saat)</Text>
-      <View style={styles.row3}>
+      <Text style={styles.label}>Doğum Saati</Text>
+      {isWeb ? (
         <TextInput
-          style={[styles.input, styles.row3Item]}
-          placeholder="SS"
+          style={styles.input}
+          placeholder="SS:DD (24 saat) — ör. 14:30"
           placeholderTextColor={Colors.textMuted}
-          value={hour}
-          onChangeText={t => setHour(t.replace(/\D/g, '').slice(0, 2))}
-          keyboardType="number-pad"
-          maxLength={2}
+          value={timeStr}
+          onChangeText={setTimeStr}
+          accessibilityLabel="Doğum saati"
         />
-        <TextInput
-          style={[styles.input, styles.row3Item]}
-          placeholder="DD"
-          placeholderTextColor={Colors.textMuted}
-          value={minute}
-          onChangeText={t => setMinute(t.replace(/\D/g, '').slice(0, 2))}
-          keyboardType="number-pad"
-          maxLength={2}
+      ) : (
+        <TouchableOpacity
+          style={styles.pickerRow}
+          onPress={() => setTimeOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Doğum saati seç"
+        >
+          <Text style={[styles.pickerText, !birth && styles.pickerPlaceholder]}>
+            {birth ? fmtTime(birth) : 'Saat seç'}
+          </Text>
+          <Text style={styles.pickerChev}>›</Text>
+        </TouchableOpacity>
+      )}
+
+      {!isWeb && (dateOpen || Platform.OS === 'ios') && (
+        <DateTimePicker
+          value={birth || new Date(1990, 5, 15)}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onDateChange}
+          maximumDate={new Date()}
+          minimumDate={new Date(1900, 0, 1)}
+          style={Platform.OS === 'ios' ? styles.iosPicker : undefined}
         />
-        <View style={[styles.row3Item, { flex: 1.5 }]} />
-      </View>
+      )}
+      {!isWeb && (timeOpen || Platform.OS === 'ios') && (
+        <DateTimePicker
+          value={birth || new Date(1990, 5, 15, 12, 0)}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onTimeChange}
+          is24Hour
+          style={Platform.OS === 'ios' ? styles.iosPicker : undefined}
+        />
+      )}
 
       <Text style={styles.label}>Doğum Şehri</Text>
       <TextInput
@@ -466,8 +566,27 @@ const styles = StyleSheet.create({
   },
   footerNote: {
     fontSize: Typography.size.xs, color: Colors.textMuted,
-    textAlign: 'center', marginTop: Spacing.lg, lineHeight: Typography.size.xs * 1.6,
+    textAlign: 'center', marginTop: Spacing.md, lineHeight: Typography.size.xs * 1.6,
     fontStyle: 'italic',
+    paddingHorizontal: Spacing.md,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+    flexWrap: 'wrap',
+  },
+  legalLink: {
+    fontSize: Typography.size.xs,
+    color: Colors.purpleSoft,
+    textDecorationLine: 'underline',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  legalSep: {
+    color: Colors.textMuted,
+    fontSize: Typography.size.xs,
   },
 
   // Form
@@ -494,6 +613,33 @@ const styles = StyleSheet.create({
   },
   row3: { flexDirection: 'row', gap: Spacing.sm },
   row3Item: { flex: 1 },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md + 2,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  pickerText: {
+    fontSize: Typography.size.md,
+    color: Colors.text,
+  },
+  pickerPlaceholder: {
+    color: Colors.textMuted,
+  },
+  pickerChev: {
+    fontSize: 22,
+    color: Colors.textMuted,
+  },
+  iosPicker: {
+    backgroundColor: Colors.surface,
+    marginTop: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
   suggestBox: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
