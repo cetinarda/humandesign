@@ -6,9 +6,9 @@ import {
   Body,
   SunPosition,
   EclipticGeoMoon,
-  EclipticLongitude,
+  GeoVector,
+  Ecliptic,
   SearchSunLongitude,
-  AstroTime,
 } from 'astronomy-engine';
 
 function norm360(x: number): number {
@@ -51,7 +51,11 @@ const PLANET_BODY: Record<string, Body> = {
 export function planetLongitude(name: string, jd: number): number {
   const body = PLANET_BODY[name];
   if (!body) throw new Error('Bilinmeyen gezegen: ' + name);
-  return norm360(EclipticLongitude(body, dateFromJD(jd)));
+  // GeoVector = jeocentric (Dünya merkezli) ekvatoryal vektör, aberration=true
+  // ile görünen pozisyon. Ecliptic ile of-date tropikal ekliptiğe çeviriyoruz.
+  const vec = GeoVector(body, dateFromJD(jd), true);
+  const ecl = Ecliptic(vec);
+  return norm360(ecl.elon);
 }
 
 // Lunar Düğüm — Astronomy-engine'de doğrudan yok; Meeus ortalama formülü
