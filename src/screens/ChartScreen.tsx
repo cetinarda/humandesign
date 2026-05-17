@@ -90,29 +90,37 @@ export function ChartScreen({ onNavigate }: Props) {
 
       {tab === 'overview' && (
         <View>
-          {/* Tip kartı */}
-          <SectionCard accent={Colors.gold}>
-            <Text style={styles.cardKicker}>TİP</Text>
-            <Text style={styles.cardTitle}>{t.emoji}  {chart.type}</Text>
+          {/* Tek hero özet */}
+          <View style={styles.heroSummary}>
+            <Text style={styles.heroEmoji}>{t.emoji}</Text>
+            <Text style={styles.heroType}>{chart.type}</Text>
+            <Text style={styles.heroStrategy}>{chart.strategy}</Text>
+            <View style={styles.heroDivider} />
+            <KeyVal k="Profil" v={`${chart.profile} — ${p.name}`} />
+            <KeyVal k="İçsel Yetki" v={a.name} />
+            <KeyVal k="Tanım" v={chart.definition} />
+            <KeyVal k="Doğru Frekans" v={chart.signature} />
+            <KeyVal k="Yanlış Frekans" v={chart.notSelf} />
+          </View>
+
+          {/* Açılır/kapanır detaylar */}
+          <Expandable
+            title="Tipini anla"
+            kicker="STRATEJİ"
+          >
             <Text style={styles.cardBody}>{t.longDesc}</Text>
-            <KeyVal k="Strateji" v={t.strategy} />
-            <KeyVal k="Doğru Frekans" v={t.signature} />
-            <KeyVal k="Yanlış Frekans" v={t.notSelf} />
-            <KeyVal k="Aura" v={t.aura} />
-            <KeyVal k="Oran" v={t.oran} />
             <View style={styles.bullets}>
               {t.pracicalTips.map((tip, i) => (
                 <Text key={i} style={styles.bullet}>•  {tip}</Text>
               ))}
             </View>
-          </SectionCard>
+          </Expandable>
 
-          {/* Yetki */}
-          <SectionCard accent={Colors.purpleSoft}>
-            <Text style={styles.cardKicker}>İÇSEL YETKİ</Text>
-            <Text style={styles.cardTitle}>{a.emoji}  {a.name}</Text>
+          <Expandable
+            title="Yetkin nasıl karar verir"
+            kicker={a.name.toLocaleUpperCase('tr')}
+          >
             <Text style={styles.cardBody}>{a.shortDesc}</Text>
-            <Text style={styles.cardSubLabel}>Karar verme</Text>
             <View style={styles.bullets}>
               {a.howToDecide.map((tip, i) => (
                 <Text key={i} style={styles.bullet}>•  {tip}</Text>
@@ -121,54 +129,33 @@ export function ChartScreen({ onNavigate }: Props) {
             {!!a.caution && (
               <Text style={styles.cardCaution}>! {a.caution}</Text>
             )}
-          </SectionCard>
+          </Expandable>
 
-          {/* Profil */}
-          <SectionCard accent={Colors.teal}>
-            <Text style={styles.cardKicker}>PROFİL</Text>
-            <Text style={styles.cardTitle}>{chart.profile} — {p.name}</Text>
+          <Expandable
+            title="Profil çizgilerin"
+            kicker={`${chart.profile} — ${p.name.toLocaleUpperCase('tr')}`}
+          >
             <Text style={styles.cardBody}>{p.longDesc}</Text>
-            <Text style={styles.cardSubLabel}>Bilinçli çizgi (Personality Sun)</Text>
+            <Text style={styles.cardSubLabel}>Bilinçli (Personality Sun)</Text>
             <Text style={styles.cardBody}>
               {personalityProfile.line}. {LINES[personalityProfile.line].name} —{' '}
               {LINES[personalityProfile.line].shortDesc}
             </Text>
-            <Text style={styles.cardSubLabel}>Bilinçsiz çizgi (Design Sun)</Text>
+            <Text style={styles.cardSubLabel}>Bilinçsiz (Design Sun)</Text>
             <Text style={styles.cardBody}>
               {designProfile.line}. {LINES[designProfile.line].name} —{' '}
               {LINES[designProfile.line].shortDesc}
             </Text>
-          </SectionCard>
+          </Expandable>
 
-          {/* Tanım */}
-          <SectionCard accent={Colors.gold}>
-            <Text style={styles.cardKicker}>TANIM (DEFINITION)</Text>
-            <Text style={styles.cardTitle}>{chart.definition}</Text>
-            <Text style={styles.cardBody}>
-              Bu, tanımlı merkezlerinin kaç ayrı ada (kümeye) ayrıldığını gösterir.
-              Tek tanımlı isen enerjin akışkandır; bölünmüşlerde köprü kuran insanları/durumları
-              ararsın. Tanımsızda hayat tamamen örnekleyici (Reflektör) bir doğa taşır.
+          {/* Aktif kanallar — kompakt */}
+          <View style={styles.channelsBlock}>
+            <Text style={styles.cardKicker}>
+              AKTİF KANALLAR · {chart.activeChannels.length}
             </Text>
-          </SectionCard>
-
-          {/* Inkarnasyon Haçı */}
-          <SectionCard accent={Colors.ember}>
-            <Text style={styles.cardKicker}>İNKARNASYON HAÇI</Text>
-            <Text style={styles.cardTitle}>{chart.incarnationCross}</Text>
-            <Text style={styles.cardBody}>
-              Hayatın büyük teması, dört ana aktivasyondan oluşur: Personality Güneş ve Dünya
-              ile Design Güneş ve Dünya. Bu dörtlü senin yaşam boyu üzerinde çalıştığın
-              evrensel öyküdür.
-            </Text>
-          </SectionCard>
-
-          {/* Kanallar */}
-          <SectionCard accent={Colors.purple}>
-            <Text style={styles.cardKicker}>AKTİF KANALLAR ({chart.activeChannels.length})</Text>
             {chart.activeChannels.length === 0 ? (
               <Text style={styles.cardBody}>
-                Hiç tanımlı kanalın yok. Bu Reflektör tasarımının özelliğidir; çevren senin
-                aynan haline gelir.
+                Tanımlı kanalın yok — Reflektör doğası. Çevren senin aynan.
               </Text>
             ) : chart.activeChannels.map(c => (
               <View key={c.id} style={styles.channelRow}>
@@ -176,13 +163,15 @@ export function ChartScreen({ onNavigate }: Props) {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.channelName}>{c.name}</Text>
                   <Text style={styles.channelDesc}>{c.shortDesc}</Text>
-                  <Text style={styles.channelMeta}>
-                    {CENTERS[c.centers[0]].name} ↔ {CENTERS[c.centers[1]].name} · {c.circuit} devre
-                  </Text>
                 </View>
               </View>
             ))}
-          </SectionCard>
+          </View>
+
+          {/* Inkarnasyon haçı — tek satır footer */}
+          <Text style={styles.crossFooter}>
+            İnkarnasyon Haçı · {chart.incarnationCross}
+          </Text>
         </View>
       )}
 
@@ -357,6 +346,31 @@ function SectionCard({ children, accent }: { children: React.ReactNode; accent: 
   );
 }
 
+function Expandable({
+  title, kicker, children,
+}: { title: string; kicker?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={expStyles.card}>
+      <TouchableOpacity
+        style={expStyles.head}
+        onPress={() => setOpen(!open)}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={title}
+      >
+        <View style={{ flex: 1 }}>
+          {!!kicker && <Text style={expStyles.kicker}>{kicker}</Text>}
+          <Text style={expStyles.title}>{title}</Text>
+        </View>
+        <Text style={expStyles.chev}>{open ? '−' : '+'}</Text>
+      </TouchableOpacity>
+      {open && <View style={expStyles.body}>{children}</View>}
+    </View>
+  );
+}
+
 function KeyVal({ k, v }: { k: string; v: string }) {
   return (
     <View style={kvStyles.row}>
@@ -374,6 +388,42 @@ const scStyles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderLeftWidth: 3,
     ...Shadows.card,
+  },
+});
+
+const expStyles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    overflow: 'hidden',
+  },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  kicker: {
+    fontSize: 10, letterSpacing: 1.4, color: Colors.gold,
+  },
+  title: {
+    fontSize: Typography.size.md,
+    color: Colors.text,
+    fontWeight: Typography.weight.semibold,
+    marginTop: 2,
+  },
+  chev: {
+    fontSize: 22, color: Colors.textMuted, marginLeft: Spacing.md,
+  },
+  body: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
 });
 
@@ -464,6 +514,52 @@ const styles = StyleSheet.create({
 
   cardKicker: {
     fontSize: 10, letterSpacing: 1.5, color: Colors.gold, marginBottom: 4,
+  },
+  heroSummary: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.gold + '30',
+    ...Shadows.gold,
+  },
+  heroEmoji: { fontSize: 44, marginBottom: 4 },
+  heroType: {
+    fontSize: Typography.size.xxl,
+    color: Colors.text,
+    fontFamily: Typography.font.serif,
+    fontWeight: Typography.weight.bold,
+  },
+  heroStrategy: {
+    fontSize: Typography.size.sm,
+    color: Colors.gold,
+    marginTop: 4,
+    letterSpacing: 0.4,
+  },
+  heroDivider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    width: '60%',
+    marginVertical: Spacing.md,
+    alignSelf: 'center',
+  },
+  channelsBlock: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  crossFooter: {
+    fontSize: Typography.size.xs,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    fontStyle: 'italic',
+    lineHeight: Typography.size.xs * 1.6,
   },
   cardTitle: {
     fontSize: Typography.size.xl, color: Colors.text,
