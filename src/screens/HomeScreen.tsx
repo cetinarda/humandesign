@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme/colors';
+import { Colors, Typography, Spacing } from '../theme/colors';
 import { useTasarimStore } from '../store/useStore';
 import { GATES } from '../data/gates';
 import { TYPES } from '../data/types';
@@ -36,20 +36,19 @@ export function HomeScreen({ onNavigate }: Props) {
 
   if (!activeProfile) {
     return (
-      <View style={[styles.empty, { paddingTop: insets.top + 60 }]}>
-        <Text style={styles.medallion}>✦</Text>
-        <Text style={styles.emptyTitle}>Sakin Tasarım'a hoş geldin</Text>
+      <View style={[styles.empty, { paddingTop: insets.top + 80 }]}>
+        <Text style={styles.brand}>SAKİN · TASARIM</Text>
+        <Text style={styles.emptyTitle}>Hoş geldin</Text>
         <Text style={styles.emptyDesc}>
           Doğum bilgilerinle kendine özel Human Design haritanı oluştur.
         </Text>
         <TouchableOpacity
-          style={styles.emptyCTA}
+          style={styles.cta}
           onPress={() => onNavigate('profile')}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel="Profil oluştur"
         >
-          <Text style={styles.emptyCTAText}>Profili Oluştur →</Text>
+          <Text style={styles.ctaText}>Başla</Text>
         </TouchableOpacity>
       </View>
     );
@@ -63,236 +62,235 @@ export function HomeScreen({ onNavigate }: Props) {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.lg, paddingBottom: Spacing.xxl }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + Spacing.xxl, paddingBottom: Spacing.xxl },
+      ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.dateLine}>
-        {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
-      </Text>
-      <Text style={styles.greeting}>
-        {greetingByHour()},{'\n'}{activeProfile.name}
-      </Text>
-
-      {/* Tek hero kart */}
-      {chart && t && a && (
-        <TouchableOpacity
-          style={styles.hero}
-          onPress={() => onNavigate('chart')}
-          activeOpacity={0.92}
-          accessibilityRole="button"
-          accessibilityLabel={`${chart.type} haritana git`}
-        >
-          <Text style={styles.heroEmoji}>{t.emoji}</Text>
-          <Text style={styles.heroType}>{chart.type}</Text>
-          <Text style={styles.heroStrategy}>{chart.strategy}</Text>
-          <Text style={styles.heroMeta}>
-            {chart.profile} · {a.name.replace(' Yetki', '')}
-          </Text>
-          <View style={styles.heroCTA}>
-            <Text style={styles.heroCTAText}>Tam haritayı gör →</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* Tek transit kartı — Sun + Moon yan yana */}
-      <View style={styles.transit}>
-        <Text style={styles.transitTitle}>Bugünün Transiti</Text>
-        <View style={styles.transitRow}>
-          <View style={styles.transitCol}>
-            <Text style={styles.transitGlyph}>☉</Text>
-            <Text style={[styles.transitGate, { color: Colors.gold }]}>
-              {today.sun.gate}.{today.sun.line}
-            </Text>
-            <Text style={styles.transitName}>{sunInfo.name}</Text>
-          </View>
-          <View style={styles.transitDivider} />
-          <View style={styles.transitCol}>
-            <Text style={styles.transitGlyph}>☽</Text>
-            <Text style={[styles.transitGate, { color: Colors.purpleSoft }]}>
-              {today.moon.gate}.{today.moon.line}
-            </Text>
-            <Text style={styles.transitName}>{moonInfo.name}</Text>
-          </View>
-        </View>
-        <Text style={styles.transitTheme}>
-          {sunInfo.theme}
+      <View style={styles.headerBlock}>
+        <Text style={styles.brand}>SAKİN · TASARIM</Text>
+        <Text style={styles.greeting}>
+          {greetingByHour()},{'\n'}{activeProfile.name}
+        </Text>
+        <Text style={styles.subtitle}>
+          {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}
         </Text>
       </View>
 
-      {/* İki kompakt link */}
-      <View style={styles.linksRow}>
+      {/* Tek özet — kart değil, satırlar */}
+      {chart && t && a && (
         <TouchableOpacity
-          style={styles.linkCard}
+          style={styles.summary}
           onPress={() => onNavigate('chart')}
-          activeOpacity={0.85}
+          activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Tam haritan"
+          accessibilityLabel="Haritana git"
         >
-          <Text style={styles.linkEmoji}>✦</Text>
-          <Text style={styles.linkLabel}>Harita</Text>
-          <Text style={styles.linkSub}>Bodygraph ve detay</Text>
+          <Text style={styles.summaryType}>{chart.type}</Text>
+          <View style={styles.summaryMetaRow}>
+            <Text style={styles.summaryMeta}>{chart.strategy}</Text>
+            <Text style={styles.summaryMeta}>·</Text>
+            <Text style={styles.summaryMeta}>{chart.profile}</Text>
+            <Text style={styles.summaryMeta}>·</Text>
+            <Text style={styles.summaryMeta}>{a.name.replace(' Yetki', '')}</Text>
+          </View>
+          <Text style={styles.summaryCTA}>Tam harita →</Text>
         </TouchableOpacity>
+      )}
 
-        <TouchableOpacity
-          style={styles.linkCard}
+      {/* Bugünün transiti — ince satırlar */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Bugünün Transiti</Text>
+
+        <TransitRow
+          glyph="☉"
+          gate={`${today.sun.gate}.${today.sun.line}`}
+          name={sunInfo.name}
+        />
+        <View style={styles.hairline} />
+        <TransitRow
+          glyph="☽"
+          gate={`${today.moon.gate}.${today.moon.line}`}
+          name={moonInfo.name}
+        />
+      </View>
+
+      {/* Alt linkler — minimal satırlar */}
+      <View style={styles.section}>
+        <NavRow
+          label="Tam haritan"
+          desc="Bodygraph, merkezler, kapılar"
+          onPress={() => onNavigate('chart')}
+        />
+        <View style={styles.hairline} />
+        <NavRow
+          label="Haftalık rapor"
+          desc="Senin için bu hafta"
           onPress={() => onNavigate('report')}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Haftalık rapor"
-        >
-          <Text style={styles.linkEmoji}>📜</Text>
-          <Text style={styles.linkLabel}>Rapor</Text>
-          <Text style={styles.linkSub}>Haftaya özel</Text>
-        </TouchableOpacity>
+        />
       </View>
     </ScrollView>
   );
 }
 
+function TransitRow({ glyph, gate, name }: { glyph: string; gate: string; name: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowGlyph}>{glyph}</Text>
+      <View style={styles.rowMid}>
+        <Text style={styles.rowTitle}>{name}</Text>
+        <Text style={styles.rowSub}>Kapı {gate}</Text>
+      </View>
+    </View>
+  );
+}
+
+function NavRow({ label, desc, onPress }: { label: string; desc: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <View style={styles.rowMid}>
+        <Text style={styles.rowTitle}>{label}</Text>
+        <Text style={styles.rowSub}>{desc}</Text>
+      </View>
+      <Text style={styles.rowArrow}>→</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingHorizontal: Spacing.lg },
+  content: { paddingHorizontal: Spacing.xl },
 
   empty: {
-    flex: 1, alignItems: 'center', backgroundColor: Colors.background, paddingHorizontal: Spacing.xl,
-  },
-  medallion: {
-    fontSize: 64, color: Colors.gold, marginBottom: Spacing.lg, opacity: 0.85,
+    flex: 1, alignItems: 'center', paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.background,
   },
   emptyTitle: {
-    fontSize: Typography.size.xxl, color: Colors.text,
-    fontFamily: Typography.font.serif, marginBottom: Spacing.md, textAlign: 'center',
+    fontSize: Typography.size.xxxl,
+    color: Colors.text,
+    fontFamily: Typography.font.serif,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
   },
   emptyDesc: {
     fontSize: Typography.size.md, color: Colors.textSecondary,
-    textAlign: 'center', lineHeight: Typography.size.md * 1.6, marginBottom: Spacing.xl,
+    textAlign: 'center', lineHeight: Typography.size.md * 1.6,
+    marginBottom: Spacing.xxl,
+    maxWidth: 360,
   },
-  emptyCTA: {
-    backgroundColor: Colors.gold,
-    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.round,
+  cta: {
+    paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.md,
+    borderRadius: 999,
+    borderWidth: 1, borderColor: Colors.gold,
   },
-  emptyCTAText: {
-    color: Colors.background, fontWeight: Typography.weight.bold, fontSize: Typography.size.md,
+  ctaText: {
+    color: Colors.gold,
+    fontSize: Typography.size.md,
+    letterSpacing: 0.5,
   },
 
-  dateLine: {
-    fontSize: 11, letterSpacing: 1.5, color: Colors.textMuted,
-    marginTop: Spacing.sm,
+  brand: {
+    fontSize: 11,
+    letterSpacing: 3,
+    color: Colors.textMuted,
+    fontWeight: Typography.weight.medium,
+  },
+
+  headerBlock: {
+    marginBottom: Spacing.xxl,
   },
   greeting: {
     fontSize: Typography.size.xxxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
     lineHeight: Typography.size.xxxl * 1.15,
-    marginTop: 4,
-    marginBottom: Spacing.xl,
+    marginTop: Spacing.md,
+  },
+  subtitle: {
+    fontSize: Typography.size.sm,
+    color: Colors.textMuted,
+    marginTop: Spacing.sm,
+    letterSpacing: 0.4,
   },
 
-  hero: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
+  summary: {
     paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.gold + '30',
-    ...Shadows.gold,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.divider,
+    marginBottom: Spacing.xxl,
   },
-  heroEmoji: { fontSize: 44, marginBottom: 4 },
-  heroType: {
+  summaryType: {
     fontSize: Typography.size.xxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
-    fontWeight: Typography.weight.bold,
   },
-  heroStrategy: {
+  summaryMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: Spacing.sm,
+    gap: 6,
+  },
+  summaryMeta: {
+    fontSize: Typography.size.sm,
+    color: Colors.textMuted,
+    letterSpacing: 0.3,
+  },
+  summaryCTA: {
+    marginTop: Spacing.lg,
     fontSize: Typography.size.sm,
     color: Colors.gold,
-    marginTop: 4,
     letterSpacing: 0.4,
   },
-  heroMeta: {
-    fontSize: Typography.size.xs,
-    color: Colors.textMuted,
-    marginTop: 6,
-    letterSpacing: 0.5,
-  },
-  heroCTA: {
-    marginTop: Spacing.lg,
-  },
-  heroCTAText: {
-    fontSize: Typography.size.sm,
-    color: Colors.gold,
-  },
 
-  transit: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+  section: {
+    marginBottom: Spacing.xxl,
   },
-  transitTitle: {
-    fontSize: 11, letterSpacing: 1.5, color: Colors.textMuted,
+  sectionLabel: {
+    fontSize: 11,
+    letterSpacing: 2,
+    color: Colors.textMuted,
     marginBottom: Spacing.md,
   },
-  transitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  transitCol: { flex: 1, alignItems: 'center' },
-  transitDivider: {
-    width: 1, height: 56, backgroundColor: Colors.divider,
-  },
-  transitGlyph: {
-    fontSize: 24, color: Colors.textSecondary, marginBottom: 2,
-  },
-  transitGate: {
-    fontSize: Typography.size.xl,
-    fontFamily: Typography.font.serif,
-    fontWeight: Typography.weight.bold,
-  },
-  transitName: {
-    fontSize: Typography.size.xs,
-    color: Colors.textSecondary,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  transitTheme: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-    fontStyle: 'italic',
-    lineHeight: Typography.size.sm * 1.55,
-  },
 
-  linksRow: {
+  row: {
     flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  linkCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
     alignItems: 'center',
+    paddingVertical: Spacing.md + 2,
   },
-  linkEmoji: { fontSize: 28, marginBottom: 6 },
-  linkLabel: {
+  rowGlyph: {
+    fontSize: 24,
+    color: Colors.textSecondary,
+    width: 40,
+  },
+  rowMid: { flex: 1 },
+  rowTitle: {
     fontSize: Typography.size.md,
     color: Colors.text,
-    fontWeight: Typography.weight.semibold,
+    fontWeight: Typography.weight.regular,
   },
-  linkSub: {
-    fontSize: Typography.size.xs,
+  rowSub: {
+    fontSize: Typography.size.sm,
     color: Colors.textMuted,
     marginTop: 2,
+  },
+  rowArrow: {
+    fontSize: 18,
+    color: Colors.textMuted,
+    marginLeft: Spacing.md,
+  },
+  hairline: {
+    height: 1,
+    backgroundColor: Colors.divider,
   },
 });

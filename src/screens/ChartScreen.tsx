@@ -66,14 +66,14 @@ export function ChartScreen({ onNavigate }: Props) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, {
-        paddingTop: insets.top + Spacing.lg, paddingBottom: Spacing.xxl,
+        paddingTop: insets.top + Spacing.xxl, paddingBottom: Spacing.xxl,
       }]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.headerLabel}>HARİTA</Text>
+      <Text style={styles.headerLabel}>SAKİN · TASARIM</Text>
       <Text style={styles.headerName}>{activeProfile.name}</Text>
       <Text style={styles.headerMeta}>
-        {activeProfile.birthDate} · {activeProfile.birthTime} · {activeProfile.city.name}
+        {activeProfile.birthDate} · {activeProfile.birthTime} · {activeProfile.city.name.split(',')[0]}
       </Text>
 
       <View style={styles.bodygraphWrap}>
@@ -405,37 +405,29 @@ const scStyles = StyleSheet.create({
 
 const expStyles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    overflow: 'hidden',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
   },
   kicker: {
-    fontSize: 10, letterSpacing: 1.4, color: Colors.gold,
+    fontSize: 10, letterSpacing: 1.4, color: Colors.textMuted,
   },
   title: {
     fontSize: Typography.size.md,
     color: Colors.text,
-    fontWeight: Typography.weight.semibold,
+    fontWeight: Typography.weight.regular,
     marginTop: 2,
   },
   chev: {
-    fontSize: 22, color: Colors.textMuted, marginLeft: Spacing.md,
+    fontSize: 18, color: Colors.textMuted, marginLeft: Spacing.md,
   },
   body: {
-    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    paddingTop: 0,
   },
 });
 
@@ -479,46 +471,44 @@ const styles = StyleSheet.create({
   },
 
   headerLabel: {
-    fontSize: 10, letterSpacing: 2, color: Colors.gold, marginBottom: 4,
+    fontSize: 11, letterSpacing: 3, color: Colors.textMuted, marginBottom: Spacing.md,
   },
   headerName: {
-    fontSize: Typography.size.xxl,
+    fontSize: Typography.size.xxxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
+    lineHeight: Typography.size.xxxl * 1.15,
   },
   headerMeta: {
     fontSize: Typography.size.sm,
     color: Colors.textMuted,
-    marginTop: 2,
-    marginBottom: Spacing.md,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+    letterSpacing: 0.3,
   },
 
   bodygraphWrap: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    marginBottom: Spacing.xl,
   },
 
   tabs: {
     flexDirection: 'row',
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: BorderRadius.round,
-    padding: 4,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   tab: {
-    flex: 1, paddingVertical: 8, alignItems: 'center',
-    borderRadius: BorderRadius.round,
+    flex: 1, paddingVertical: Spacing.md, alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: Colors.surfaceElevated,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.gold,
+    marginBottom: -1,
   },
   tabText: {
     fontSize: Typography.size.sm, color: Colors.textMuted,
+    letterSpacing: 0.4,
   },
   tabTextActive: {
     color: Colors.text, fontWeight: Typography.weight.semibold,
@@ -528,42 +518,38 @@ const styles = StyleSheet.create({
     fontSize: 10, letterSpacing: 1.5, color: Colors.gold, marginBottom: 4,
   },
   heroSummary: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.xl,
     marginBottom: Spacing.lg,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.gold + '30',
-    ...Shadows.gold,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.divider,
   },
-  heroEmoji: { fontSize: 44, marginBottom: 4 },
+  heroEmoji: { fontSize: 36, marginBottom: 4, opacity: 0.85 },
   heroType: {
     fontSize: Typography.size.xxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
-    fontWeight: Typography.weight.bold,
   },
   heroStrategy: {
     fontSize: Typography.size.sm,
-    color: Colors.gold,
+    color: Colors.textMuted,
     marginTop: 4,
     letterSpacing: 0.4,
   },
   heroDivider: {
     height: 1,
     backgroundColor: Colors.divider,
-    width: '60%',
-    marginVertical: Spacing.md,
+    width: '40%',
+    marginVertical: Spacing.lg,
     alignSelf: 'center',
   },
   channelsBlock: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+    marginTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
   crossFooter: {
     fontSize: Typography.size.xs,

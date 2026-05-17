@@ -51,34 +51,35 @@ export function TabNavigator() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.screen}>{renderScreen()}</View>
+      <View style={styles.screen}>
+        <View style={styles.centerWrap}>{renderScreen()}</View>
+      </View>
 
       <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
-        {TABS.map(tab => {
-          const isActive = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={styles.tabItem}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={`${tab.label} sekmesi`}
-            >
-              <View style={[styles.tabIndicator, isActive && { backgroundColor: tab.activeColor }]} />
-              <Text style={[styles.tabEmoji, !isActive && styles.tabEmojiInactive]}>
-                {tab.emoji}
-              </Text>
-              <Text style={[
-                styles.tabLabel,
-                { color: isActive ? tab.activeColor : Colors.textMuted }
-              ]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        <View style={styles.tabBarInner}>
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabItem}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`${tab.label} sekmesi`}
+              >
+                <Text style={[
+                  styles.tabLabel,
+                  isActive ? styles.tabLabelActive : null,
+                ]}>
+                  {tab.label}
+                </Text>
+                {isActive && <View style={styles.tabDot} />}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -92,37 +93,42 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  centerWrap: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+  },
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: Colors.backgroundSecondary,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    backgroundColor: Colors.background,
+    borderTopWidth: 0,
     paddingTop: Spacing.sm,
+    alignItems: 'center',
+  },
+  tabBarInner: {
+    flexDirection: 'row',
+    width: '100%',
+    maxWidth: 560,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     paddingBottom: Spacing.xs,
-    position: 'relative',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    top: -Spacing.sm - 1,
-    width: 24,
-    height: 2,
-    borderRadius: BorderRadius.round,
-    backgroundColor: 'transparent',
-  },
-  tabEmoji: {
-    fontSize: 22,
-    marginBottom: 2,
-  },
-  tabEmojiInactive: {
-    opacity: 0.5,
+    paddingTop: 6,
   },
   tabLabel: {
-    fontSize: Typography.size.xs,
-    letterSpacing: 0.3,
-    fontWeight: Typography.weight.medium,
+    fontSize: Typography.size.sm,
+    letterSpacing: 0.2,
+    fontWeight: Typography.weight.regular,
+    color: Colors.textMuted,
+  },
+  tabLabelActive: {
+    color: Colors.text,
+    fontWeight: Typography.weight.semibold,
+  },
+  tabDot: {
+    width: 4, height: 4, borderRadius: 999,
+    backgroundColor: Colors.gold,
+    marginTop: 4,
   },
 });

@@ -252,13 +252,10 @@ const styles = StyleSheet.create({
   },
 
   triCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.gold,
-    ...Shadows.card,
+    paddingVertical: Spacing.lg,
+    marginBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   triEmoji: { fontSize: 26, marginBottom: 4 },
   triKicker: {
@@ -280,14 +277,12 @@ const styles = StyleSheet.create({
   },
 
   spotCard: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.gold + '30',
+    paddingVertical: Spacing.xl,
+    marginVertical: Spacing.lg,
     alignItems: 'center',
-    ...Shadows.gold,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.divider,
   },
   spotKicker: { fontSize: 10, letterSpacing: 1.6, color: Colors.gold },
   spotGate: {
@@ -312,12 +307,10 @@ const styles = StyleSheet.create({
   miniValue: { fontSize: Typography.size.xs, color: Colors.text, marginTop: 2 },
 
   practiceCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
     marginBottom: Spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.tealSoft,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   practiceKicker: {
     fontSize: 10, letterSpacing: 1.6, color: Colors.tealSoft, marginBottom: 4,
@@ -349,12 +342,10 @@ const styles = StyleSheet.create({
   },
 
   bigCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    paddingVertical: Spacing.lg,
+    marginBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   bigKicker: {
     fontSize: 11, letterSpacing: 1.6, color: Colors.gold, marginBottom: 4,
@@ -405,11 +396,9 @@ const styles = StyleSheet.create({
   },
   disclaimerBox: {
     marginTop: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.emberSoft,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
   disclaimerText: {
     fontSize: Typography.size.xs,
