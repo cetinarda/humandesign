@@ -285,10 +285,9 @@ function computeAuthority(defined: Set<CenterKey>, type: HDType, channels: Chann
 function computeProfile(personality: PlanetActivation[], design: PlanetActivation[]): ProfileKey {
   const p = personality.find(a => a.planet === 'sun')!;
   const d = design.find(a => a.planet === 'sun')!;
-  const key = `${p.line}/${d.line}` as ProfileKey;
-  if (PROFILES[key]) return key;
-  // bilinen 12 profilden değilse en yakını
-  return '1/3';
+  // Her zaman gerçek line/line döndür — PROFILES tablosunda olmayanlar
+  // için consumer uygun fallback yapmalı.
+  return `${p.line}/${d.line}` as ProfileKey;
 }
 
 function computeIncarnationCross(personality: PlanetActivation[], design: PlanetActivation[]): string {
@@ -296,11 +295,14 @@ function computeIncarnationCross(personality: PlanetActivation[], design: Planet
   const pEarth = personality.find(a => a.planet === 'earth')!;
   const dSun = design.find(a => a.planet === 'sun')!;
   const dEarth = design.find(a => a.planet === 'earth')!;
-  // Tema: Right Angle / Left Angle / Juxtaposition profiline göre belirlenir.
+  // Ra Uru Hu sınıflaması:
+  //   Sağ Açı (Personal Destiny): 1/3, 1/4, 2/4, 2/5, 3/5, 3/6, 4/6
+  //   Sol Açı (Transpersonal):    5/1, 5/2, 6/2, 6/3
+  //   Yan Yana (Juxtaposition):   4/1
   const profile = `${pSun.line}/${dSun.line}`;
   let angle = 'Sağ Açı';
-  if (['4/1', '5/1', '5/2', '6/2', '6/3', '3/6'].includes(profile)) angle = 'Sol Açı';
   if (profile === '4/1') angle = 'Yan Yana (Juxtaposition)';
+  else if (['5/1', '5/2', '6/2', '6/3'].includes(profile)) angle = 'Sol Açı';
   return `${angle} Haç — ${pSun.gate}/${pEarth.gate} | ${dSun.gate}/${dEarth.gate}`;
 }
 

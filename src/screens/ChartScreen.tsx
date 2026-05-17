@@ -46,9 +46,21 @@ export function ChartScreen({ onNavigate }: Props) {
 
   const t = TYPES[chart.type];
   const a = AUTHORITIES[chart.authority];
-  const p = PROFILES[chart.profile];
   const personalityProfile = chart.personality.find(x => x.planet === 'sun')!;
   const designProfile = chart.design.find(x => x.planet === 'sun')!;
+  // PROFILES sadece 12 klasik kombinasyonu içerir; 36 line çifti mümkün
+  // olduğu için fallback olarak çizgi adlarından birleştirilmiş ad üretiyoruz.
+  const p = PROFILES[chart.profile] ?? {
+    key: chart.profile,
+    name: `${LINES[personalityProfile.line].name} / ${LINES[designProfile.line].name}`,
+    theme: '',
+    shortDesc: `${LINES[personalityProfile.line].shortDesc}`,
+    longDesc:
+      `Bilinçli çizgi ${personalityProfile.line}. ${LINES[personalityProfile.line].name}: ` +
+      `${LINES[personalityProfile.line].shortDesc} ` +
+      `Bilinçsiz çizgi ${designProfile.line}. ${LINES[designProfile.line].name}: ` +
+      `${LINES[designProfile.line].shortDesc}`,
+  };
 
   return (
     <ScrollView

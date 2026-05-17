@@ -4,47 +4,49 @@ export interface City {
   lng: number;
   tz: number;            // standart UTC offset (saat) — DST haricinde
   country: string;
-  dst?: 'eu' | 'us' | 'none';   // DST kuralı
+  dst?: 'eu' | 'us' | 'tr' | 'none';   // DST kuralı
 }
 
-// Türkiye DST uygulamaz (2016'dan beri sürekli UTC+3).
-// AB: Mart son Pazar – Ekim son Pazar.
-// ABD: Mart 2. Pazar – Kasım 1. Pazar.
+// Kurallar:
+// - AB: Mart son Pazar 01:00 UTC – Ekim son Pazar 01:00 UTC (+1)
+// - ABD: Mart 2. Pazar – Kasım 1. Pazar yerel 02:00 (+1)
+// - Türkiye: 1985-2016 arası AB kuralları (+1), 2017+ kalıcı +1 (UTC+3 sabit).
+//   Bu yüzden Türk şehirleri tz:2 + dst:'tr' olarak tanımlandı.
 
 export const CITIES: City[] = [
   // Türkiye
-  { name: 'İstanbul, Türkiye', lat: 41.0082, lng: 28.9784, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Ankara, Türkiye', lat: 39.9334, lng: 32.8597, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'İzmir, Türkiye', lat: 38.4192, lng: 27.1287, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Bursa, Türkiye', lat: 40.1828, lng: 29.0665, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Antalya, Türkiye', lat: 36.8969, lng: 30.7133, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Adana, Türkiye', lat: 37.0000, lng: 35.3213, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Konya, Türkiye', lat: 37.8746, lng: 32.4932, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Gaziantep, Türkiye', lat: 37.0662, lng: 37.3833, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Kayseri, Türkiye', lat: 38.7312, lng: 35.4787, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Eskişehir, Türkiye', lat: 39.7767, lng: 30.5206, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Trabzon, Türkiye', lat: 41.0015, lng: 39.7178, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Diyarbakır, Türkiye', lat: 37.9144, lng: 40.2306, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Samsun, Türkiye', lat: 41.2867, lng: 36.3300, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Erzurum, Türkiye', lat: 39.9000, lng: 41.2700, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Mersin, Türkiye', lat: 36.8121, lng: 34.6415, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Sakarya, Türkiye', lat: 40.7569, lng: 30.3781, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Denizli, Türkiye', lat: 37.7765, lng: 29.0864, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Muğla, Türkiye', lat: 37.2154, lng: 28.3636, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Bodrum, Türkiye', lat: 37.0344, lng: 27.4305, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Çanakkale, Türkiye', lat: 40.1553, lng: 26.4142, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Edirne, Türkiye', lat: 41.6764, lng: 26.5557, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Van, Türkiye', lat: 38.4942, lng: 43.3833, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Mardin, Türkiye', lat: 37.3212, lng: 40.7245, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Şanlıurfa, Türkiye', lat: 37.1591, lng: 38.7969, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Kocaeli, Türkiye', lat: 40.8533, lng: 29.8815, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Tekirdağ, Türkiye', lat: 40.9833, lng: 27.5167, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Balıkesir, Türkiye', lat: 39.6484, lng: 27.8826, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Manisa, Türkiye', lat: 38.6191, lng: 27.4289, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Aydın, Türkiye', lat: 37.8444, lng: 27.8458, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Hatay, Türkiye', lat: 36.4018, lng: 36.3498, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Malatya, Türkiye', lat: 38.3552, lng: 38.3095, tz: 3, country: 'TR', dst: 'none' },
-  { name: 'Sivas, Türkiye', lat: 39.7477, lng: 37.0179, tz: 3, country: 'TR', dst: 'none' },
+  { name: 'İstanbul, Türkiye', lat: 41.0082, lng: 28.9784, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Ankara, Türkiye', lat: 39.9334, lng: 32.8597, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'İzmir, Türkiye', lat: 38.4192, lng: 27.1287, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Bursa, Türkiye', lat: 40.1828, lng: 29.0665, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Antalya, Türkiye', lat: 36.8969, lng: 30.7133, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Adana, Türkiye', lat: 37.0000, lng: 35.3213, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Konya, Türkiye', lat: 37.8746, lng: 32.4932, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Gaziantep, Türkiye', lat: 37.0662, lng: 37.3833, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Kayseri, Türkiye', lat: 38.7312, lng: 35.4787, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Eskişehir, Türkiye', lat: 39.7767, lng: 30.5206, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Trabzon, Türkiye', lat: 41.0015, lng: 39.7178, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Diyarbakır, Türkiye', lat: 37.9144, lng: 40.2306, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Samsun, Türkiye', lat: 41.2867, lng: 36.3300, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Erzurum, Türkiye', lat: 39.9000, lng: 41.2700, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Mersin, Türkiye', lat: 36.8121, lng: 34.6415, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Sakarya, Türkiye', lat: 40.7569, lng: 30.3781, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Denizli, Türkiye', lat: 37.7765, lng: 29.0864, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Muğla, Türkiye', lat: 37.2154, lng: 28.3636, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Bodrum, Türkiye', lat: 37.0344, lng: 27.4305, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Çanakkale, Türkiye', lat: 40.1553, lng: 26.4142, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Edirne, Türkiye', lat: 41.6764, lng: 26.5557, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Van, Türkiye', lat: 38.4942, lng: 43.3833, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Mardin, Türkiye', lat: 37.3212, lng: 40.7245, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Şanlıurfa, Türkiye', lat: 37.1591, lng: 38.7969, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Kocaeli, Türkiye', lat: 40.8533, lng: 29.8815, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Tekirdağ, Türkiye', lat: 40.9833, lng: 27.5167, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Balıkesir, Türkiye', lat: 39.6484, lng: 27.8826, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Manisa, Türkiye', lat: 38.6191, lng: 27.4289, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Aydın, Türkiye', lat: 37.8444, lng: 27.8458, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Hatay, Türkiye', lat: 36.4018, lng: 36.3498, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Malatya, Türkiye', lat: 38.3552, lng: 38.3095, tz: 2, country: 'TR', dst: 'tr' },
+  { name: 'Sivas, Türkiye', lat: 39.7477, lng: 37.0179, tz: 2, country: 'TR', dst: 'tr' },
 
   // Avrupa
   { name: 'Londra, Birleşik Krallık', lat: 51.5074, lng: -0.1278, tz: 0, country: 'GB', dst: 'eu' },
@@ -142,7 +144,7 @@ export const CITIES: City[] = [
   { name: 'Moskova, Rusya', lat: 55.7558, lng: 37.6173, tz: 3, country: 'RU', dst: 'none' },
   { name: 'St. Petersburg, Rusya', lat: 59.9311, lng: 30.3609, tz: 3, country: 'RU', dst: 'none' },
   { name: 'Kiev, Ukrayna', lat: 50.4501, lng: 30.5234, tz: 2, country: 'UA', dst: 'eu' },
-  { name: 'Lefkoşa, KKTC', lat: 35.1856, lng: 33.3823, tz: 3, country: 'TR', dst: 'none' },
+  { name: 'Lefkoşa, KKTC', lat: 35.1856, lng: 33.3823, tz: 2, country: 'TR', dst: 'tr' },
   { name: 'Diğer / Bilinmiyor', lat: 41.0082, lng: 28.9784, tz: 3, country: 'XX', dst: 'none' },
 ];
 
@@ -184,6 +186,16 @@ export function dstOffsetHours(city: City, utcDate: Date): number {
     start.setUTCHours(2 - city.tz);
     const end = nthSundayOfMonth(y, 10, 1);   // Kasım 1. Pazar
     end.setUTCHours(2 - city.tz);
+    return utcDate >= start && utcDate < end ? 1 : 0;
+  }
+  if (city.dst === 'tr') {
+    // Türkiye: 2017'den itibaren kalıcı +1 (UTC+3 sabit). 1985-2016 AB kuralları.
+    if (y >= 2017) return 1;
+    if (y < 1985) return 0;
+    const start = lastSundayOfMonth(y, 2);
+    start.setUTCHours(1);
+    const end = lastSundayOfMonth(y, 9);
+    end.setUTCHours(1);
     return utcDate >= start && utcDate < end ? 1 : 0;
   }
   return 0;
