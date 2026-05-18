@@ -7,7 +7,13 @@ web-build/
 .env
 .env.local
 .netlify/
-ios/Pods/
-android/.gradle/
-android/build/
-android/app/build/
+ios/
+android/
+# yukarıdakiler "expo prebuild" çıktısıdır; her sürümde yeniden üretilir
+# tüm klasörü dışlamak yerine sadece pod/build dışlamak istersen,
+# ios/ ve android/ satırlarını kaldırıp aşağıdakileri aç:
+# ios/Pods/
+# ios/build/
+# android/.gradle/
+# android/build/
+# android/app/build/

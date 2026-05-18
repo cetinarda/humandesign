@@ -13,6 +13,15 @@ npm run ios        # iOS simulator
 npm run android    # Android emulator
 ```
 
+## Yayın / Build
+
+iOS'u App Store / TestFlight'a yüklemek için iki yol var; ikisi de hazır:
+
+- **Lokal Xcode** (önerilen, Niyet-App ile aynı akış) → [`XCODE.md`](./XCODE.md)
+- **Bulut EAS Build** (Mac yoksa) → `npm run build:ios` (bkz. [`eas.json`](./eas.json))
+
+Sürüm çıkarma kontrol listesi: [`RELEASE.md`](./RELEASE.md)
+
 ## Yapı
 
 - **Expo + React Native + Web** (TypeScript)
