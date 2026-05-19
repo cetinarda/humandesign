@@ -81,10 +81,39 @@ export function ChartScreen({ onNavigate }: Props) {
         <View style={styles.heroLeft}>
           <Text style={styles.heroType}>{chart.type}</Text>
           <Text style={styles.heroStrategy}>{chart.strategy}</Text>
+          <Text style={styles.heroEssence}>{t.shortDesc}</Text>
+
           <View style={styles.heroFacts}>
-            <Fact k="Profil" v={chart.profile} />
-            <Fact k="Yetki" v={a.name.replace(' Yetki', '')} />
-            <Fact k="Tanım" v={chart.definition.split(' ')[0]} />
+            <Fact
+              k="Profil"
+              v={chart.profile}
+              desc={`${p.name}${p.theme ? ' · ' + p.theme : ''}`}
+            />
+            <Fact
+              k="Yetki"
+              v={a.name.replace(' Yetki', '')}
+              desc={`${a.emoji} ${a.shortDesc.split('.')[0]}`}
+            />
+            <Fact
+              k="Tanım"
+              v={chart.definition.split(' ')[0]}
+              desc={
+                chart.definition.startsWith('Tek')
+                  ? 'Tüm tanımlı merkezler tek küme; akışkan enerji'
+                  : chart.definition.startsWith('Bölünmüş')
+                  ? 'İki ayrı küme; köprü kuran insanlara çekilirsin'
+                  : chart.definition.startsWith('Üçlü')
+                  ? 'Üç ayrı küme; üç farklı bağlantı arayışı'
+                  : chart.definition.startsWith('Dörtlü')
+                  ? 'Dört ayrı küme; nadir, çok yönlü bağ kurma'
+                  : 'Reflektör — örnekleyici doğa'
+              }
+            />
+            <Fact
+              k="İmza"
+              v={chart.signature}
+              desc={`Yanlış frekans: ${chart.notSelf}`}
+            />
           </View>
         </View>
         <View style={styles.heroRight}>
@@ -362,11 +391,16 @@ function Section({
   );
 }
 
-function Fact({ k, v }: { k: string; v: string }) {
+function Fact({ k, v, desc }: { k: string; v: string; desc?: string }) {
   return (
     <View style={styles.factRow}>
       <Text style={styles.factK}>{k}</Text>
-      <Text style={styles.factV} numberOfLines={1}>{v}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.factV} numberOfLines={1}>{v}</Text>
+        {!!desc && (
+          <Text style={styles.factDesc} numberOfLines={2}>{desc}</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -455,23 +489,38 @@ const styles = StyleSheet.create({
     marginTop: 4,
     letterSpacing: 0.3,
   },
+  heroEssence: {
+    fontSize: Typography.size.xs,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    lineHeight: Typography.size.xs * 1.55,
+    fontStyle: 'italic',
+  },
   heroFacts: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.lg,
   },
   factRow: {
     flexDirection: 'row',
-    paddingVertical: 3,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   factK: {
     width: 64,
     fontSize: Typography.size.xs,
     color: Colors.textMuted,
     letterSpacing: 0.4,
+    paddingTop: 2,
   },
   factV: {
-    flex: 1,
     fontSize: Typography.size.sm,
     color: Colors.text,
+  },
+  factDesc: {
+    fontSize: Typography.size.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
+    lineHeight: Typography.size.xs * 1.5,
   },
 
   numberRow: {
