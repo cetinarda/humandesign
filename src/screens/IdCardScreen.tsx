@@ -11,6 +11,7 @@ import { Colors, Typography, Spacing, BorderRadius } from '../theme/colors';
 import { useTasarimStore } from '../store/useStore';
 import { Bodygraph } from './../components/Bodygraph';
 import { Starfield } from '../components/Starfield';
+import { StoryCard, STORY_W, STORY_H } from '../components/StoryCard';
 import { TYPES } from '../data/types';
 import { AUTHORITIES } from '../data/authorities';
 
@@ -22,8 +23,9 @@ export function IdCardScreen({ onClose }: Props) {
   const insets = useSafeAreaInsets();
   const { activeProfile, chart, updateProfilePhoto } = useTasarimStore();
   const cardRef = useRef<any>(null);
+  const storyRef = useRef<any>(null);
   const [uploading, setUploading] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [sharing, setSharing] = useState<null | 'card' | 'story'>(null);
 
   // narrowed referanslar — callback closure'larında null check kaybolmasın
   const profile = activeProfile;
@@ -69,30 +71,39 @@ export function IdCardScreen({ onClose }: Props) {
     await updateProfilePhoto(profile!.id, null);
   }
 
-  async function shareCard() {
+  async function capture(
+    ref: any,
+    opts: { width?: number; height?: number; suffix: string }
+  ) {
     try {
-      setSharing(true);
+      setSharing(opts.suffix === 'story' ? 'story' : 'card');
+      const fileName = `sakin-tasarim-${profile!.name.replace(/\s+/g, '_')}-${opts.suffix}.png`;
       if (Platform.OS === 'web') {
-        // Web: tarayıcı download tetikleyebilir; expo-sharing web'de yok
-        const uri = await captureRef(cardRef as any, {
+        const uri = await captureRef(ref as any, {
           format: 'png',
           quality: 0.95,
           result: 'data-uri',
+          ...(opts.width ? { width: opts.width } : {}),
+          ...(opts.height ? { height: opts.height } : {}),
         });
         const link = document.createElement('a');
         link.href = uri;
-        link.download = `sakin-tasarim-${profile!.name.replace(/\s/g, '_')}.png`;
+        link.download = fileName;
         link.click();
       } else {
-        const uri = await captureRef(cardRef as any, {
+        const uri = await captureRef(ref as any, {
           format: 'png',
           quality: 0.95,
+          ...(opts.width ? { width: opts.width } : {}),
+          ...(opts.height ? { height: opts.height } : {}),
         });
         const can = await Sharing.isAvailableAsync();
         if (can) {
           await Sharing.shareAsync(uri, {
             mimeType: 'image/png',
-            dialogTitle: 'Kimlik Kartını Paylaş',
+            dialogTitle: opts.suffix === 'story'
+              ? 'Instagram Story olarak Paylaş'
+              : 'Kimlik Kartını Paylaş',
           });
         } else {
           Alert.alert('Paylaş', 'Cihazında paylaşma özelliği aktif değil.');
@@ -101,8 +112,17 @@ export function IdCardScreen({ onClose }: Props) {
     } catch (e: any) {
       Alert.alert('Hata', e.message || 'Paylaşılamadı');
     } finally {
-      setSharing(false);
+      setSharing(null);
     }
+  }
+
+  function shareCard() {
+    capture(cardRef, { suffix: 'kart' });
+  }
+
+  function shareStory() {
+    // 540x960 RN view → 1080x1920 PNG (Instagram Story tam boyut)
+    capture(storyRef, { width: 1080, height: 1920, suffix: 'story' });
   }
 
   const photoUri = profile.photoUri;
@@ -230,23 +250,51 @@ export function IdCardScreen({ onClose }: Props) {
 
           <TouchableOpacity
             style={[styles.btn, styles.btnPrimary]}
-            onPress={shareCard}
-            disabled={sharing}
+            onPress={shareStory}
+            disabled={sharing !== null}
             accessibilityRole="button"
-            accessibilityLabel="Kartı indir veya paylaş"
+            accessibilityLabel="Instagram Story olarak indir"
           >
-            {sharing
+            {sharing === 'story'
               ? <ActivityIndicator color={Colors.background} />
-              : <Text style={[styles.btnText, { color: Colors.background, fontWeight: '700' }]}>
-                  {Platform.OS === 'web' ? 'İndir (PNG)' : 'Paylaş'}
-                </Text>}
+              : (
+                <Text style={[styles.btnText, { color: Colors.background, fontWeight: '700' }]}>
+                  {Platform.OS === 'web' ? 'Instagram Story İndir (1080×1920)' : 'Instagram Story Paylaş'}
+                </Text>
+              )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={shareCard}
+            disabled={sharing !== null}
+            accessibilityRole="button"
+            accessibilityLabel="Kartı indir"
+          >
+            {sharing === 'card'
+              ? <ActivityIndicator color={Colors.gold} />
+              : (
+                <Text style={styles.btnText}>
+                  {Platform.OS === 'web' ? 'Kart olarak indir' : 'Kart olarak paylaş'}
+                </Text>
+              )}
           </TouchableOpacity>
         </View>
 
         <Text style={styles.note}>
-          Fotoğrafın yalnızca cihazında saklanır. Stilize kapak sakin.life paletinde
-          lokal olarak uygulanır; AI servis çağrısı yapılmaz.
+          Instagram Story tam boyut (9:16, 1080×1920). Fotoğrafın yalnızca cihazında
+          saklanır; AI servis çağrısı yapılmaz, sakin paleti lokal olarak uygulanır.
         </Text>
+
+        {/* OFF-SCREEN StoryCard — capture için render edilir, görünmez */}
+        <View style={styles.offscreen} pointerEvents="none">
+          <ViewShot
+            ref={storyRef}
+            options={{ format: 'png', quality: 0.95, width: 1080, height: 1920 }}
+          >
+            <StoryCard profile={profile} chart={chart} />
+          </ViewShot>
+        </View>
       </ScrollView>
     </View>
   );
@@ -456,5 +504,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     lineHeight: Typography.size.xs * 1.6,
     fontStyle: 'italic',
+  },
+  offscreen: {
+    position: 'absolute',
+    top: 0,
+    left: -10000,
+    width: 540,
+    height: 960,
+    opacity: 1,
   },
 });
