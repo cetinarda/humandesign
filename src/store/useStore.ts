@@ -10,6 +10,7 @@ export interface SavedProfile {
   birthTime: string;     // HH:MM (24h)
   city: City;
   createdAt: string;
+  photoUri?: string;     // lokal asset URI (lokal stilize foto)
 }
 
 export interface UserStats {
@@ -45,6 +46,7 @@ interface StoreValue {
   ) => Promise<SavedProfile>;
   selectProfile: (id: string) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
+  updateProfilePhoto: (id: string, photoUri: string | null) => Promise<void>;
   setOnboarded: () => Promise<void>;
   getLevelTitle: (level: number) => string;
 }
@@ -155,6 +157,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) { console.error('chart calc:', e); }
   }, [profiles]);
 
+  const updateProfilePhoto = useCallback(async (pid: string, photoUri: string | null) => {
+    setProfiles(prev => {
+      const next = prev.map(p =>
+        p.id === pid
+          ? { ...p, photoUri: photoUri ?? undefined }
+          : p
+      );
+      AsyncStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const deleteProfile = useCallback(async (pid: string) => {
     setProfiles(prev => {
       const next = prev.filter(p => p.id !== pid);
@@ -178,7 +192,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value: StoreValue = {
     profiles, activeProfile, stats, chart, isLoading, isOnboarded,
-    addProfile, selectProfile, deleteProfile, setOnboarded, getLevelTitle,
+    addProfile, selectProfile, deleteProfile, updateProfilePhoto,
+    setOnboarded, getLevelTitle,
   };
 
   return React.createElement(StoreCtx.Provider, { value }, children);

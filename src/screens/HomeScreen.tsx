@@ -5,6 +5,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing } from '../theme/colors';
 import { useTasarimStore } from '../store/useStore';
+import { Starfield } from '../components/Starfield';
 import { GATES } from '../data/gates';
 import { TYPES } from '../data/types';
 import { AUTHORITIES } from '../data/authorities';
@@ -69,6 +70,7 @@ export function HomeScreen({ onNavigate }: Props) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerBlock}>
+        <Starfield width={520} height={180} density={0.45} seed={5} />
         <Text style={styles.brand}>SAKİN · TASARIM</Text>
         <Text style={styles.greeting}>
           {greetingByHour()},{'\n'}{activeProfile.name}
@@ -206,6 +208,11 @@ const styles = StyleSheet.create({
 
   headerBlock: {
     marginBottom: Spacing.xxl,
+    position: 'relative',
+    overflow: 'hidden',
+    marginHorizontal: -Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
   },
   greeting: {
     fontSize: Typography.size.xxxl,

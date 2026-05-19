@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme/colors';
+import { Starfield } from '../components/Starfield';
 
 interface Props {
   onAccept: () => void;
@@ -21,6 +22,7 @@ export function OnboardingScreen({ onAccept }: Props) {
   if (step === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top + Spacing.xxxl, paddingBottom: insets.bottom + Spacing.xl }]}>
+        <Starfield width={520} height={420} density={0.7} seed={11} />
         <View style={styles.medallionWrap}>
           <Text style={styles.medallion}>✦</Text>
         </View>

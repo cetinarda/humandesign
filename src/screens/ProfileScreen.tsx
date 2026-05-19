@@ -4,6 +4,7 @@ import {
   TextInput, Alert, Linking, Platform,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { IdCardScreen } from './IdCardScreen';
 
 const PRIVACY_URL = 'https://sakin.life/tasarim/gizlilik';
 const TERMS_URL = 'https://sakin.life/tasarim/kosullar';
@@ -22,6 +23,11 @@ export function ProfileScreen() {
   } = useTasarimStore();
 
   const [showForm, setShowForm] = useState(false);
+  const [showIdCard, setShowIdCard] = useState(false);
+
+  if (showIdCard) {
+    return <IdCardScreen onClose={() => setShowIdCard(false)} />;
+  }
 
   if (!activeProfile && !showForm) {
     return (
@@ -79,6 +85,25 @@ export function ProfileScreen() {
           </Text>
         )}
       </View>
+
+      <TouchableOpacity
+        style={styles.idCardCta}
+        onPress={() => setShowIdCard(true)}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Kimlik Kartı'nı aç"
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={styles.idCardCtaLabel}>KİMLİK KARTI</Text>
+          <Text style={styles.idCardCtaTitle}>
+            Haritanı kart olarak indir ya da paylaş
+          </Text>
+          <Text style={styles.idCardCtaSub}>
+            Fotoğraf · tip · profil · kanallar tek görselde
+          </Text>
+        </View>
+        <Text style={styles.idCardCtaArrow}>→</Text>
+      </TouchableOpacity>
 
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
@@ -497,12 +522,38 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm, color: Colors.gold, marginTop: 4, letterSpacing: 0.6,
   },
 
+  idCardCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: Colors.divider,
+  },
+  idCardCtaLabel: {
+    fontSize: 10, letterSpacing: 1.8, color: Colors.gold,
+    marginBottom: 4,
+  },
+  idCardCtaTitle: {
+    fontSize: Typography.size.md, color: Colors.text,
+    fontWeight: Typography.weight.regular,
+  },
+  idCardCtaSub: {
+    fontSize: Typography.size.xs, color: Colors.textMuted,
+    marginTop: 2,
+  },
+  idCardCtaArrow: {
+    fontSize: 22, color: Colors.gold, marginLeft: Spacing.md,
+  },
+
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    paddingVertical: Spacing.md,
     marginBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   statBox: { flex: 1, alignItems: 'center' },
   statValue: {
