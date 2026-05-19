@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { IdCardScreen } from './IdCardScreen';
+import { BUILD_INFO } from '../buildInfo';
 
 const PRIVACY_URL = 'https://sakin.life/tasarim/gizlilik';
 const TERMS_URL = 'https://sakin.life/tasarim/kosullar';
@@ -210,6 +211,9 @@ export function ProfileScreen() {
         Bilgilerin yalnızca cihazında saklanır. Hesaplamalar lokal yapılır;
         doğum verin sunucuya gönderilmez. Sakin Tasarım eğitim ve kişisel keşif
         amaçlıdır; tıbbi, psikolojik veya finansal tavsiye değildir.
+      </Text>
+      <Text style={styles.buildStamp}>
+        v{BUILD_INFO.version} · {BUILD_INFO.commit} · {BUILD_INFO.builtAt.slice(0, 16).replace('T', ' ')}
       </Text>
     </ScrollView>
   );
@@ -638,6 +642,14 @@ const styles = StyleSheet.create({
   legalSep: {
     color: Colors.textMuted,
     fontSize: Typography.size.xs,
+  },
+  buildStamp: {
+    fontSize: 9,
+    letterSpacing: 1.4,
+    color: Colors.textDim,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 
   // Form
