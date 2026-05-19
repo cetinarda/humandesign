@@ -3,12 +3,12 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../theme/colors';
+import { Colors, Typography, Spacing } from '../theme/colors';
 import { useTasarimStore } from '../store/useStore';
 import { Bodygraph } from '../components/Bodygraph';
 import { TYPES } from '../data/types';
 import { AUTHORITIES } from '../data/authorities';
-import { PROFILES, LINES } from '../data/profiles';
+import { PROFILES, LINES, ProfileKey } from '../data/profiles';
 import { CENTERS, CenterKey, CENTER_ORDER } from '../data/centers';
 import { GATES } from '../data/gates';
 import { getActivationsByCenter, planetLabel } from '../utils/humanDesign';
@@ -17,28 +17,25 @@ interface Props {
   onNavigate: (t: 'home' | 'chart' | 'report' | 'profile') => void;
 }
 
-type Tab = 'overview' | 'centers' | 'gates' | 'planets';
-
 export function ChartScreen({ onNavigate }: Props) {
   const insets = useSafeAreaInsets();
   const { activeProfile, chart } = useTasarimStore();
-  const [tab, setTab] = useState<Tab>('overview');
   const [openCenter, setOpenCenter] = useState<CenterKey | null>(null);
+  const [openGate, setOpenGate] = useState<number | null>(null);
 
   if (!activeProfile || !chart) {
     return (
       <View style={[styles.empty, { paddingTop: insets.top + 60 }]}>
-        <Text style={styles.emptyMedallion}>✦</Text>
+        <Text style={styles.medallion}>✦</Text>
         <Text style={styles.emptyTitle}>Henüz harita yok</Text>
-        <Text style={styles.emptyDesc}>
-          Önce profilini oluştur. Doğum bilgilerin olmadan harita çizilemez.
-        </Text>
+        <Text style={styles.emptyDesc}>Önce profilini oluştur.</Text>
         <TouchableOpacity
-          style={styles.emptyCTA}
+          style={styles.cta}
           onPress={() => onNavigate('profile')}
           activeOpacity={0.85}
+          accessibilityRole="button"
         >
-          <Text style={styles.emptyCTAText}>Profili Oluştur →</Text>
+          <Text style={styles.ctaText}>Profili Oluştur</Text>
         </TouchableOpacity>
       </View>
     );
@@ -46,544 +43,537 @@ export function ChartScreen({ onNavigate }: Props) {
 
   const t = TYPES[chart.type];
   const a = AUTHORITIES[chart.authority];
-  const personalityProfile = chart.personality.find(x => x.planet === 'sun')!;
-  const designProfile = chart.design.find(x => x.planet === 'sun')!;
-  // PROFILES sadece 12 klasik kombinasyonu içerir; 36 line çifti mümkün
-  // olduğu için fallback olarak çizgi adlarından birleştirilmiş ad üretiyoruz.
-  const p = PROFILES[chart.profile] ?? {
+  const pSun = chart.personality.find(x => x.planet === 'sun')!;
+  const dSun = chart.design.find(x => x.planet === 'sun')!;
+  const pLine = LINES[pSun.line];
+  const dLine = LINES[dSun.line];
+  const p = PROFILES[chart.profile as ProfileKey] ?? {
     key: chart.profile,
-    name: `${LINES[personalityProfile.line].name} / ${LINES[designProfile.line].name}`,
+    name: `${pLine.name} / ${dLine.name}`,
     theme: '',
-    shortDesc: `${LINES[personalityProfile.line].shortDesc}`,
+    shortDesc: pLine.shortDesc,
     longDesc:
-      `Bilinçli çizgi ${personalityProfile.line}. ${LINES[personalityProfile.line].name}: ` +
-      `${LINES[personalityProfile.line].shortDesc} ` +
-      `Bilinçsiz çizgi ${designProfile.line}. ${LINES[designProfile.line].name}: ` +
-      `${LINES[designProfile.line].shortDesc}`,
+      `Bilinçli çizgi ${pSun.line}. ${pLine.name}: ${pLine.shortDesc} ` +
+      `Bilinçsiz çizgi ${dSun.line}. ${dLine.name}: ${dLine.shortDesc}`,
   };
+
+  const definedCenters = CENTER_ORDER.filter(k => chart.definedCenters.has(k));
+  const undefinedCenters = CENTER_ORDER.filter(k => !chart.definedCenters.has(k));
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, {
-        paddingTop: insets.top + Spacing.xxl, paddingBottom: Spacing.xxl,
+        paddingTop: insets.top + Spacing.xxl,
+        paddingBottom: Spacing.xxl,
       }]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.headerLabel}>SAKİN · TASARIM</Text>
-      <Text style={styles.headerName}>{activeProfile.name}</Text>
-      <Text style={styles.headerMeta}>
+      {/* Üst başlık */}
+      <Text style={styles.brand}>SAKİN · TASARIM</Text>
+      <Text style={styles.name}>{activeProfile.name}</Text>
+      <Text style={styles.meta}>
         {activeProfile.birthDate} · {activeProfile.birthTime} · {activeProfile.city.name.split(',')[0]}
       </Text>
 
-      <View style={styles.bodygraphWrap}>
-        <Bodygraph chart={chart} size={280} />
+      {/* HERO — sol özet, sağ köşede küçük bodygraph */}
+      <View style={styles.hero}>
+        <View style={styles.heroLeft}>
+          <Text style={styles.heroType}>{chart.type}</Text>
+          <Text style={styles.heroStrategy}>{chart.strategy}</Text>
+          <View style={styles.heroFacts}>
+            <Fact k="Profil" v={chart.profile} />
+            <Fact k="Yetki" v={a.name.replace(' Yetki', '')} />
+            <Fact k="Tanım" v={chart.definition.split(' ')[0]} />
+          </View>
+        </View>
+        <View style={styles.heroRight}>
+          <Bodygraph chart={chart} size={140} showLabels={false} />
+        </View>
       </View>
 
-      {/* Tab başlıkları */}
-      <View style={styles.tabs}>
-        {([
-          { k: 'overview', l: 'Özet' },
-          { k: 'centers', l: 'Merkezler' },
-          { k: 'gates', l: 'Kapılar' },
-          { k: 'planets', l: 'Gezegenler' },
-        ] as const).map(t => (
-          <TouchableOpacity
-            key={t.k}
-            style={[styles.tab, tab === t.k && styles.tabActive]}
-            onPress={() => setTab(t.k)}
-          >
-            <Text style={[styles.tabText, tab === t.k && styles.tabTextActive]}>
-              {t.l}
-            </Text>
-          </TouchableOpacity>
+      {/* İkinci sıra — özet rakamlar */}
+      <View style={styles.numberRow}>
+        <NumberStat label="Aktif Kapı" value={`${chart.activeGates.size}`} sub="/ 64" />
+        <NumberStat label="Aktif Kanal" value={`${chart.activeChannels.length}`} sub="/ 36" />
+        <NumberStat label="Tanımlı Merkez" value={`${chart.definedCenters.size}`} sub="/ 9" />
+      </View>
+
+      {/* === DETAY AKIŞI === */}
+      <Section title="Tipin" kicker="TİP" big>
+        <Text style={styles.body}>{t.longDesc}</Text>
+        <KeyVal k="Strateji" v={t.strategy} />
+        <KeyVal k="Doğru frekans" v={t.signature} />
+        <KeyVal k="Yanlış frekans" v={t.notSelf} />
+        <KeyVal k="Aura" v={t.aura} />
+        <KeyVal k="Rol" v={t.rolePrimary} />
+        <KeyVal k="Oran" v={t.oran} last />
+        <Text style={styles.subLabel}>Pratik notlar</Text>
+        {t.pracicalTips.map((tip, i) => (
+          <Text key={i} style={styles.bullet}>·  {tip}</Text>
         ))}
-      </View>
+      </Section>
 
-      {tab === 'overview' && (
-        <View>
-          {/* Tek hero özet */}
-          <View style={styles.heroSummary}>
-            <Text style={styles.heroEmoji}>{t.emoji}</Text>
-            <Text style={styles.heroType}>{chart.type}</Text>
-            <Text style={styles.heroStrategy}>{chart.strategy}</Text>
-            <View style={styles.heroDivider} />
-            <KeyVal k="Profil" v={`${chart.profile} — ${p.name}`} />
-            <KeyVal k="İçsel Yetki" v={a.name} />
-            <KeyVal k="Tanım" v={chart.definition} />
-            <KeyVal k="Doğru Frekans" v={chart.signature} />
-            <KeyVal k="Yanlış Frekans" v={chart.notSelf} />
-          </View>
+      <Section title="İçsel Yetkin" kicker={a.name.toLocaleUpperCase('tr')}>
+        <Text style={styles.body}>{a.shortDesc}</Text>
+        <Text style={styles.subLabel}>Karar verme adımları</Text>
+        {a.howToDecide.map((tip, i) => (
+          <Text key={i} style={styles.bullet}>·  {tip}</Text>
+        ))}
+        {!!a.caution && <Text style={styles.caution}>! {a.caution}</Text>}
+      </Section>
 
-          {/* Açılır/kapanır detaylar */}
-          <Expandable
-            title="Tipini anla"
-            kicker="STRATEJİ"
-          >
-            <Text style={styles.cardBody}>{t.longDesc}</Text>
-            <View style={styles.bullets}>
-              {t.pracicalTips.map((tip, i) => (
-                <Text key={i} style={styles.bullet}>•  {tip}</Text>
-              ))}
-            </View>
-          </Expandable>
+      <Section title="Profilin" kicker={`${chart.profile} — ${p.name.toLocaleUpperCase('tr')}`}>
+        <Text style={styles.body}>{p.longDesc}</Text>
+        <Text style={styles.subLabel}>Bilinçli çizgi · Personality Sun {pSun.gate}.{pSun.line}</Text>
+        <Text style={styles.body}>
+          <Text style={styles.lineTitle}>{pSun.line}. {pLine.name}</Text>{'\n'}
+          {pLine.shortDesc}{'\n'}
+          <Text style={styles.shadowNote}>Gölge: {pLine.shadow}</Text>
+        </Text>
+        <Text style={styles.subLabel}>Bilinçsiz çizgi · Design Sun {dSun.gate}.{dSun.line}</Text>
+        <Text style={styles.body}>
+          <Text style={styles.lineTitle}>{dSun.line}. {dLine.name}</Text>{'\n'}
+          {dLine.shortDesc}{'\n'}
+          <Text style={styles.shadowNote}>Gölge: {dLine.shadow}</Text>
+        </Text>
+      </Section>
 
-          <Expandable
-            title="Yetkin nasıl karar verir"
-            kicker={a.name.toLocaleUpperCase('tr')}
-          >
-            <Text style={styles.cardBody}>{a.shortDesc}</Text>
-            <View style={styles.bullets}>
-              {a.howToDecide.map((tip, i) => (
-                <Text key={i} style={styles.bullet}>•  {tip}</Text>
-              ))}
-            </View>
-            {!!a.caution && (
-              <Text style={styles.cardCaution}>! {a.caution}</Text>
-            )}
-          </Expandable>
+      <Section title="Tanım ve İnkarnasyon Haçı" kicker="DEFINITION & CROSS">
+        <KeyVal k="Tanım türü" v={chart.definition} />
+        <KeyVal k="İnkarnasyon Haçı" v={chart.incarnationCross} last />
+        <Text style={[styles.body, { marginTop: Spacing.md }]}>
+          Tanım, tanımlı merkezlerinin kaç ayrı küme halinde bağlandığını söyler.
+          Tek tanımlı isen enerjin akışkandır; bölünmüşlerde köprü kuran insan ve
+          durumlara çekilirsin. İnkarnasyon Haçı senin yaşam boyu üzerinde
+          çalıştığın evrensel temadır — Personality Sun/Earth ve Design Sun/Earth
+          aktivasyonlarından örülür.
+        </Text>
+      </Section>
 
-          <Expandable
-            title="Profil çizgilerin"
-            kicker={`${chart.profile} — ${p.name.toLocaleUpperCase('tr')}`}
-          >
-            <Text style={styles.cardBody}>{p.longDesc}</Text>
-            <Text style={styles.cardSubLabel}>Bilinçli (Personality Sun)</Text>
-            <Text style={styles.cardBody}>
-              {personalityProfile.line}. {LINES[personalityProfile.line].name} —{' '}
-              {LINES[personalityProfile.line].shortDesc}
-            </Text>
-            <Text style={styles.cardSubLabel}>Bilinçsiz (Design Sun)</Text>
-            <Text style={styles.cardBody}>
-              {designProfile.line}. {LINES[designProfile.line].name} —{' '}
-              {LINES[designProfile.line].shortDesc}
-            </Text>
-          </Expandable>
-
-          {/* Aktif kanallar — kompakt */}
-          <View style={styles.channelsBlock}>
-            <Text style={styles.cardKicker}>
-              AKTİF KANALLAR · {chart.activeChannels.length}
-            </Text>
-            {chart.activeChannels.length === 0 ? (
-              <Text style={styles.cardBody}>
-                Tanımlı kanalın yok — Reflektör doğası. Çevren senin aynan.
+      <Section
+        title={`Aktif Kanalların · ${chart.activeChannels.length}`}
+        kicker="KANALLAR"
+      >
+        {chart.activeChannels.length === 0 ? (
+          <Text style={styles.body}>
+            Tanımlı kanalın yok — Reflektör doğası. Çevren senin aynan.
+          </Text>
+        ) : chart.activeChannels.map(c => (
+          <View key={c.id} style={styles.channelRow}>
+            <Text style={styles.channelId}>{c.id}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.channelName}>{c.name}</Text>
+              <Text style={styles.channelDesc}>{c.shortDesc}</Text>
+              <Text style={styles.channelMeta}>
+                {CENTERS[c.centers[0]].name} ↔ {CENTERS[c.centers[1]].name} · {c.circuit} devre
               </Text>
-            ) : chart.activeChannels.map(c => (
-              <View key={c.id} style={styles.channelRow}>
-                <Text style={styles.channelId}>{c.id}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.channelName}>{c.name}</Text>
-                  <Text style={styles.channelDesc}>{c.shortDesc}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {/* Inkarnasyon haçı — tek satır footer */}
-          <Text style={styles.crossFooter}>
-            İnkarnasyon Haçı · {chart.incarnationCross}
-          </Text>
-        </View>
-      )}
-
-      {tab === 'centers' && (
-        <View>
-          <Text style={styles.tabHelper}>
-            Tanımlı merkezler senin sabit, güvenilir frekansındır. Tanımsız merkezler ise
-            başkalarından örneklediğin alanlardır — yanlış benliğin tuzakları burada;
-            bilgelik de burada birikir.
-          </Text>
-          {CENTER_ORDER.map(k => {
-            const c = CENTERS[k];
-            const isDef = chart.definedCenters.has(k);
-            const isOpen = openCenter === k;
-            const acts = getActivationsByCenter(chart, k);
-            return (
-              <TouchableOpacity
-                key={k}
-                style={[styles.centerCard, isDef && { borderColor: c.color + '60' }]}
-                onPress={() => setOpenCenter(isOpen ? null : k)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.centerHead}>
-                  <View style={[styles.centerDot, { backgroundColor: isDef ? c.color : 'transparent', borderColor: c.color }]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.centerName}>{c.emoji} {c.name}</Text>
-                    <Text style={[styles.centerStatus, { color: isDef ? Colors.gold : Colors.textMuted }]}>
-                      {isDef ? 'TANIMLI' : 'TANIMSIZ'} · {c.bio}
-                    </Text>
-                  </View>
-                  <Text style={styles.centerChev}>{isOpen ? '−' : '+'}</Text>
-                </View>
-                {isOpen && (
-                  <View style={styles.centerBody}>
-                    <Text style={styles.cardSubLabel}>İşlev</Text>
-                    <Text style={styles.cardBody}>{c.function}</Text>
-
-                    <Text style={styles.cardSubLabel}>
-                      {isDef ? c.defined.title : c.undefined.title}
-                    </Text>
-                    <Text style={styles.cardBody}>
-                      {isDef ? c.defined.desc : c.undefined.desc}
-                    </Text>
-
-                    {isDef ? (
-                      <>
-                        <Text style={styles.cardSubLabel}>Hediyeler</Text>
-                        {c.defined.gifts.map((g, i) => (
-                          <Text key={i} style={styles.bullet}>•  {g}</Text>
-                        ))}
-                      </>
-                    ) : (
-                      <>
-                        <Text style={styles.cardSubLabel}>Yanlış Benlik Sorusu</Text>
-                        <Text style={styles.cardBody}>{c.undefined.notSelfQuestion}</Text>
-                        <Text style={styles.cardSubLabel}>Kazanılan Bilgelik</Text>
-                        <Text style={styles.cardBody}>{c.undefined.wisdom}</Text>
-                      </>
-                    )}
-
-                    {(acts.personality.length > 0 || acts.design.length > 0) && (
-                      <>
-                        <Text style={styles.cardSubLabel}>Bu merkezdeki aktivasyonların</Text>
-                        {acts.personality.map(act => (
-                          <Text key={'p' + act.planet} style={styles.activationLine}>
-                            <Text style={{ color: Colors.text }}>● </Text>
-                            {planetLabel(act.planet)} · {GATES[act.gate].name}{' '}
-                            <Text style={{ color: Colors.gold }}>{act.gate}.{act.line}</Text>
-                          </Text>
-                        ))}
-                        {acts.design.map(act => (
-                          <Text key={'d' + act.planet} style={styles.activationLine}>
-                            <Text style={{ color: Colors.ember }}>● </Text>
-                            {planetLabel(act.planet)} · {GATES[act.gate].name}{' '}
-                            <Text style={{ color: Colors.ember }}>{act.gate}.{act.line}</Text>
-                          </Text>
-                        ))}
-                      </>
-                    )}
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {tab === 'gates' && (
-        <View>
-          <Text style={styles.tabHelper}>
-            Aktif kapıların: {chart.activeGates.size} / 64. Bilinçli (siyah) kapılar
-            farkındalığında, bilinçsiz (kırmızı) kapılar ise bedensel/genetik mirasında.
-          </Text>
-          {Array.from(chart.activeGates).sort((a, b) => a - b).map(g => {
-            const info = GATES[g];
-            const inP = chart.personalityGates.has(g);
-            const inD = chart.designGates.has(g);
-            const dot =
-              inP && inD ? Colors.gold :
-              inP ? '#FFFFFF' : Colors.ember;
-            const tag =
-              inP && inD ? 'Bilinçli + Bilinçsiz' :
-              inP ? 'Bilinçli' : 'Bilinçsiz';
-            return (
-              <View key={g} style={styles.gateCard}>
-                <View style={styles.gateHead}>
-                  <View style={[styles.gateDot, { backgroundColor: dot }]} />
-                  <Text style={styles.gateNum}>{g}</Text>
-                  <Text style={styles.gateName}>{info.name}</Text>
-                  <Text style={styles.gateCenter}>{CENTERS[info.center].emoji}</Text>
-                </View>
-                <Text style={styles.gateTheme}>{info.theme}</Text>
-                <View style={styles.gateRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.miniLabel}>HEDİYE</Text>
-                    <Text style={styles.miniValue}>{info.gift}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.miniLabel}>GÖLGE</Text>
-                    <Text style={styles.miniValue}>{info.shadow}</Text>
-                  </View>
-                </View>
-                <Text style={styles.gateTag}>{tag}</Text>
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      {tab === 'planets' && (
-        <View>
-          <Text style={styles.tabHelper}>
-            13 gezegenin doğum (bilinçli) ve doğumdan ~88 gün önceki (bilinçsiz)
-            pozisyonları. Sol sütun bilinçli, sağ sütun bilinçsizdir.
-          </Text>
-          <View style={styles.planetTable}>
-            <View style={styles.planetHead}>
-              <Text style={[styles.planetCell, styles.planetHeadText, { flex: 1.2 }]}>Gezegen</Text>
-              <Text style={[styles.planetCell, styles.planetHeadText, { color: Colors.text }]}>● Bilinçli</Text>
-              <Text style={[styles.planetCell, styles.planetHeadText, { color: Colors.ember }]}>● Bilinçsiz</Text>
             </View>
-            {chart.personality.map((act, idx) => {
-              const d = chart.design[idx];
-              return (
-                <View key={act.planet} style={styles.planetRow}>
-                  <Text style={[styles.planetCell, { flex: 1.2, color: Colors.text }]}>
-                    {planetLabel(act.planet)}
-                  </Text>
-                  <Text style={styles.planetCell}>
-                    <Text style={{ color: Colors.gold }}>{act.gate}.{act.line}</Text>{'\n'}
-                    <Text style={styles.planetGateName}>{GATES[act.gate].name}</Text>
-                  </Text>
-                  <Text style={styles.planetCell}>
-                    <Text style={{ color: Colors.ember }}>{d.gate}.{d.line}</Text>{'\n'}
-                    <Text style={styles.planetGateName}>{GATES[d.gate].name}</Text>
-                  </Text>
-                </View>
-              );
-            })}
           </View>
+        ))}
+      </Section>
+
+      <Section title={`Tanımlı Merkezlerin · ${definedCenters.length}`} kicker="MERKEZ">
+        <Text style={styles.body}>
+          Tanımlı merkezler senin sabit, güvenilir frekansındır. Hayata bu
+          merkezlerden tutarlı bir enerji yayarsın.
+        </Text>
+        {definedCenters.map(k => {
+          const c = CENTERS[k];
+          const isOpen = openCenter === k;
+          const acts = getActivationsByCenter(chart, k);
+          return (
+            <View key={k} style={styles.centerItem}>
+              <TouchableOpacity
+                style={styles.centerHead}
+                onPress={() => setOpenCenter(isOpen ? null : k)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isOpen }}
+              >
+                <View style={[styles.centerDot, { backgroundColor: c.color }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.centerName}>{c.name}</Text>
+                  <Text style={styles.centerBio}>{c.bio}</Text>
+                </View>
+                <Text style={styles.chev}>{isOpen ? '−' : '+'}</Text>
+              </TouchableOpacity>
+              {isOpen && (
+                <View style={styles.centerBody}>
+                  <Text style={styles.body}>{c.defined.desc}</Text>
+                  <Text style={styles.subLabel}>Hediyeler</Text>
+                  {c.defined.gifts.map((g, i) => (
+                    <Text key={i} style={styles.bullet}>·  {g}</Text>
+                  ))}
+                  {(acts.personality.length + acts.design.length) > 0 && (
+                    <>
+                      <Text style={styles.subLabel}>Bu merkezdeki aktivasyonlar</Text>
+                      {acts.personality.map(act => (
+                        <Text key={'p' + act.planet} style={styles.actLine}>
+                          <Text style={{ color: Colors.text }}>● </Text>
+                          {planetLabel(act.planet)} · {GATES[act.gate].name}{' '}
+                          <Text style={{ color: Colors.gold }}>{act.gate}.{act.line}</Text>
+                        </Text>
+                      ))}
+                      {acts.design.map(act => (
+                        <Text key={'d' + act.planet} style={styles.actLine}>
+                          <Text style={{ color: Colors.ember }}>● </Text>
+                          {planetLabel(act.planet)} · {GATES[act.gate].name}{' '}
+                          <Text style={{ color: Colors.ember }}>{act.gate}.{act.line}</Text>
+                        </Text>
+                      ))}
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </Section>
+
+      <Section title={`Tanımsız Merkezlerin · ${undefinedCenters.length}`} kicker="GEÇİRGEN">
+        <Text style={styles.body}>
+          Tanımsız merkezler senin "yanlış benlik" tuzaklarını taşır ama aynı
+          zamanda yaşam boyu kazanacağın bilgeliğin de evidir. Burada öğrenirsin.
+        </Text>
+        {undefinedCenters.map(k => {
+          const c = CENTERS[k];
+          const isOpen = openCenter === k;
+          return (
+            <View key={k} style={styles.centerItem}>
+              <TouchableOpacity
+                style={styles.centerHead}
+                onPress={() => setOpenCenter(isOpen ? null : k)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isOpen }}
+              >
+                <View style={[styles.centerDot, styles.centerDotEmpty, { borderColor: c.color }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.centerName}>{c.name}</Text>
+                  <Text style={styles.centerBio}>{c.bio}</Text>
+                </View>
+                <Text style={styles.chev}>{isOpen ? '−' : '+'}</Text>
+              </TouchableOpacity>
+              {isOpen && (
+                <View style={styles.centerBody}>
+                  <Text style={styles.body}>{c.undefined.desc}</Text>
+                  <Text style={styles.subLabel}>Yanlış benlik sorusu</Text>
+                  <Text style={styles.body}>{c.undefined.notSelfQuestion}</Text>
+                  <Text style={styles.subLabel}>Kazanılan bilgelik</Text>
+                  <Text style={styles.body}>{c.undefined.wisdom}</Text>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </Section>
+
+      <Section title={`Aktif Kapıların · ${chart.activeGates.size}`} kicker="KAPI">
+        <Text style={styles.body}>
+          Beyaz nokta · sadece bilinçli (Personality){'\n'}
+          Kırmızı nokta · sadece bilinçsiz (Design){'\n'}
+          Altın nokta · her ikisi
+        </Text>
+        {Array.from(chart.activeGates).sort((a, b) => a - b).map(g => {
+          const info = GATES[g];
+          const inP = chart.personalityGates.has(g);
+          const inD = chart.designGates.has(g);
+          const dot = inP && inD ? Colors.gold : inP ? '#FFFFFF' : Colors.ember;
+          const isOpen = openGate === g;
+          return (
+            <View key={g} style={styles.gateItem}>
+              <TouchableOpacity
+                style={styles.gateHead}
+                onPress={() => setOpenGate(isOpen ? null : g)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+              >
+                <View style={[styles.gateDot, { backgroundColor: dot }]} />
+                <Text style={styles.gateNum}>{g}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.gateName}>{info.name}</Text>
+                  <Text style={styles.gateCenterLabel}>{CENTERS[info.center].name}</Text>
+                </View>
+                <Text style={styles.chev}>{isOpen ? '−' : '+'}</Text>
+              </TouchableOpacity>
+              {isOpen && (
+                <View style={styles.gateBody}>
+                  <Text style={styles.body}>{info.theme}</Text>
+                  <KeyVal k="Hediye" v={info.gift} />
+                  <KeyVal k="Gölge" v={info.shadow} last />
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </Section>
+
+      <Section title="Gezegen Aktivasyonları" kicker="EFEMERİT">
+        <Text style={styles.body}>
+          13 gezegenin doğum (bilinçli) ve doğumdan ~88 gün öncesi (bilinçsiz)
+          pozisyonları. Her gezegen bir kapıyı ve çizgiyi aktive eder.
+        </Text>
+        <View style={styles.planetHead}>
+          <Text style={[styles.planetCell, styles.planetCellHead, { flex: 1.4 }]}>Gezegen</Text>
+          <Text style={[styles.planetCell, styles.planetCellHead]}>
+            <Text style={{ color: Colors.text }}>● </Text>Bilinçli
+          </Text>
+          <Text style={[styles.planetCell, styles.planetCellHead]}>
+            <Text style={{ color: Colors.ember }}>● </Text>Bilinçsiz
+          </Text>
         </View>
-      )}
+        {chart.personality.map((act, idx) => {
+          const d = chart.design[idx];
+          return (
+            <View key={act.planet} style={styles.planetRow}>
+              <Text style={[styles.planetCell, { flex: 1.4, color: Colors.text }]}>
+                {planetLabel(act.planet)}
+              </Text>
+              <Text style={styles.planetCell}>
+                <Text style={{ color: Colors.gold }}>{act.gate}.{act.line}</Text>{'\n'}
+                <Text style={styles.planetGateName}>{GATES[act.gate].name}</Text>
+              </Text>
+              <Text style={styles.planetCell}>
+                <Text style={{ color: Colors.ember }}>{d.gate}.{d.line}</Text>{'\n'}
+                <Text style={styles.planetGateName}>{GATES[d.gate].name}</Text>
+              </Text>
+            </View>
+          );
+        })}
+      </Section>
     </ScrollView>
   );
 }
 
-function SectionCard({ children, accent }: { children: React.ReactNode; accent: string }) {
+// === Yardımcı bileşenler ===
+
+function Section({
+  title, kicker, big, children,
+}: {
+  title: string; kicker?: string; big?: boolean; children: React.ReactNode;
+}) {
   return (
-    <View style={[scStyles.card, { borderLeftColor: accent }]}>
-      {children}
+    <View style={styles.section}>
+      {!!kicker && <Text style={styles.sectionKicker}>{kicker}</Text>}
+      <Text style={big ? styles.sectionTitleBig : styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionBody}>{children}</View>
     </View>
   );
 }
 
-function Expandable({
-  title, kicker, children,
-}: { title: string; kicker?: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function Fact({ k, v }: { k: string; v: string }) {
   return (
-    <View style={expStyles.card}>
-      <TouchableOpacity
-        style={expStyles.head}
-        onPress={() => setOpen(!open)}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={title}
-      >
-        <View style={{ flex: 1 }}>
-          {!!kicker && <Text style={expStyles.kicker}>{kicker}</Text>}
-          <Text style={expStyles.title}>{title}</Text>
-        </View>
-        <Text style={expStyles.chev}>{open ? '−' : '+'}</Text>
-      </TouchableOpacity>
-      {open && <View style={expStyles.body}>{children}</View>}
+    <View style={styles.factRow}>
+      <Text style={styles.factK}>{k}</Text>
+      <Text style={styles.factV} numberOfLines={1}>{v}</Text>
     </View>
   );
 }
 
-function KeyVal({ k, v }: { k: string; v: string }) {
+function NumberStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <View style={kvStyles.row}>
-      <Text style={kvStyles.k}>{k}</Text>
-      <Text style={kvStyles.v}>{v}</Text>
+    <View style={styles.numStat}>
+      <Text style={styles.numValueRow}>
+        <Text style={styles.numValue}>{value}</Text>
+        {!!sub && <Text style={styles.numSub}> {sub}</Text>}
+      </Text>
+      <Text style={styles.numLabel}>{label}</Text>
     </View>
   );
 }
 
-const scStyles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderLeftWidth: 3,
-    ...Shadows.card,
-  },
-});
-
-const expStyles = StyleSheet.create({
-  card: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  head: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-  },
-  kicker: {
-    fontSize: 10, letterSpacing: 1.4, color: Colors.textMuted,
-  },
-  title: {
-    fontSize: Typography.size.md,
-    color: Colors.text,
-    fontWeight: Typography.weight.regular,
-    marginTop: 2,
-  },
-  chev: {
-    fontSize: 18, color: Colors.textMuted, marginLeft: Spacing.md,
-  },
-  body: {
-    paddingBottom: Spacing.lg,
-    paddingTop: 0,
-  },
-});
-
-const kvStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  k: { fontSize: Typography.size.sm, color: Colors.textMuted, letterSpacing: 0.6 },
-  v: { fontSize: Typography.size.sm, color: Colors.text, fontWeight: Typography.weight.medium, maxWidth: '60%', textAlign: 'right' },
-});
+function KeyVal({ k, v, last }: { k: string; v: string; last?: boolean }) {
+  return (
+    <View style={[styles.kvRow, last && styles.kvRowLast]}>
+      <Text style={styles.kvK}>{k}</Text>
+      <Text style={styles.kvV} numberOfLines={3}>{v}</Text>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingHorizontal: Spacing.lg },
+  content: { paddingHorizontal: Spacing.xl },
 
   empty: {
-    flex: 1, alignItems: 'center', backgroundColor: Colors.background, paddingHorizontal: Spacing.xl,
+    flex: 1, alignItems: 'center',
+    backgroundColor: Colors.background, paddingHorizontal: Spacing.xl,
   },
-  emptyMedallion: {
+  medallion: {
     fontSize: 64, color: Colors.gold, marginBottom: Spacing.lg, opacity: 0.85,
   },
   emptyTitle: {
-    fontSize: Typography.size.xxl, color: Colors.text, marginBottom: Spacing.md,
-    fontFamily: Typography.font.serif,
+    fontSize: Typography.size.xxl, color: Colors.text,
+    fontFamily: Typography.font.serif, marginBottom: Spacing.md,
   },
   emptyDesc: {
     fontSize: Typography.size.md, color: Colors.textSecondary,
-    textAlign: 'center', lineHeight: Typography.size.md * 1.6, marginBottom: Spacing.xl,
+    textAlign: 'center', marginBottom: Spacing.xl,
   },
-  emptyCTA: {
-    backgroundColor: Colors.gold,
-    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.round,
+  cta: {
+    paddingHorizontal: Spacing.xxl, paddingVertical: Spacing.md,
+    borderRadius: 999, borderWidth: 1, borderColor: Colors.gold,
   },
-  emptyCTAText: {
-    color: Colors.background, fontWeight: Typography.weight.bold, fontSize: Typography.size.md,
-  },
+  ctaText: { color: Colors.gold },
 
-  headerLabel: {
-    fontSize: 11, letterSpacing: 3, color: Colors.textMuted, marginBottom: Spacing.md,
+  brand: {
+    fontSize: 11, letterSpacing: 3, color: Colors.textMuted,
+    fontWeight: Typography.weight.medium,
   },
-  headerName: {
+  name: {
     fontSize: Typography.size.xxxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
     lineHeight: Typography.size.xxxl * 1.15,
-  },
-  headerMeta: {
-    fontSize: Typography.size.sm,
-    color: Colors.textMuted,
     marginTop: Spacing.sm,
-    marginBottom: Spacing.xl,
+  },
+  meta: {
+    fontSize: Typography.size.sm, color: Colors.textMuted,
+    marginTop: 4, marginBottom: Spacing.xl,
     letterSpacing: 0.3,
   },
 
-  bodygraphWrap: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-
-  tabs: {
+  hero: {
     flexDirection: 'row',
-    marginBottom: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  tab: {
-    flex: 1, paddingVertical: Spacing.md, alignItems: 'center',
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.gold,
-    marginBottom: -1,
-  },
-  tabText: {
-    fontSize: Typography.size.sm, color: Colors.textMuted,
-    letterSpacing: 0.4,
-  },
-  tabTextActive: {
-    color: Colors.text, fontWeight: Typography.weight.semibold,
-  },
-
-  cardKicker: {
-    fontSize: 10, letterSpacing: 1.5, color: Colors.gold, marginBottom: 4,
-  },
-  heroSummary: {
-    paddingVertical: Spacing.xl,
-    marginBottom: Spacing.lg,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
+    paddingVertical: Spacing.lg,
+    borderTopWidth: 1, borderBottomWidth: 1,
     borderColor: Colors.divider,
   },
-  heroEmoji: { fontSize: 36, marginBottom: 4, opacity: 0.85 },
+  heroLeft: { flex: 1, paddingRight: Spacing.md },
+  heroRight: { width: 140, alignItems: 'center' },
   heroType: {
     fontSize: Typography.size.xxl,
     color: Colors.text,
     fontFamily: Typography.font.serif,
+    lineHeight: Typography.size.xxl * 1.1,
   },
   heroStrategy: {
     fontSize: Typography.size.sm,
-    color: Colors.textMuted,
+    color: Colors.gold,
     marginTop: 4,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
-  heroDivider: {
-    height: 1,
-    backgroundColor: Colors.divider,
-    width: '40%',
-    marginVertical: Spacing.lg,
-    alignSelf: 'center',
+  heroFacts: {
+    marginTop: Spacing.md,
   },
-  channelsBlock: {
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-    marginTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+  factRow: {
+    flexDirection: 'row',
+    paddingVertical: 3,
   },
-  crossFooter: {
+  factK: {
+    width: 64,
     fontSize: Typography.size.xs,
     color: Colors.textMuted,
-    textAlign: 'center',
-    marginTop: Spacing.lg,
-    fontStyle: 'italic',
-    lineHeight: Typography.size.xs * 1.6,
+    letterSpacing: 0.4,
   },
-  cardTitle: {
-    fontSize: Typography.size.xl, color: Colors.text,
-    fontFamily: Typography.font.serif, marginBottom: Spacing.sm,
+  factV: {
+    flex: 1,
+    fontSize: Typography.size.sm,
+    color: Colors.text,
   },
-  cardBody: {
-    fontSize: Typography.size.sm, color: Colors.textSecondary,
-    lineHeight: Typography.size.sm * 1.6, marginBottom: Spacing.sm,
+
+  numberRow: {
+    flexDirection: 'row',
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
-  cardSubLabel: {
-    fontSize: 10, letterSpacing: 1.2, color: Colors.textMuted,
-    marginTop: Spacing.sm, marginBottom: 4,
+  numStat: { flex: 1, alignItems: 'center' },
+  numValueRow: { alignItems: 'baseline' as any },
+  numValue: {
+    fontSize: Typography.size.xxxl,
+    color: Colors.text,
+    fontFamily: Typography.font.serif,
   },
-  cardCaution: {
-    fontSize: Typography.size.sm, color: Colors.emberSoft,
-    marginTop: Spacing.sm, fontStyle: 'italic',
+  numSub: {
+    fontSize: Typography.size.sm,
+    color: Colors.textMuted,
   },
-  bullets: { marginTop: 4 },
+  numLabel: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+
+  section: {
+    paddingVertical: Spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  sectionKicker: {
+    fontSize: 10, letterSpacing: 2, color: Colors.gold,
+    marginBottom: 6,
+  },
+  sectionTitle: {
+    fontSize: Typography.size.xl,
+    color: Colors.text,
+    fontFamily: Typography.font.serif,
+    lineHeight: Typography.size.xl * 1.2,
+  },
+  sectionTitleBig: {
+    fontSize: Typography.size.xxl,
+    color: Colors.text,
+    fontFamily: Typography.font.serif,
+    lineHeight: Typography.size.xxl * 1.15,
+  },
+  sectionBody: { marginTop: Spacing.md },
+
+  body: {
+    fontSize: Typography.size.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.size.sm * 1.65,
+  },
+  subLabel: {
+    fontSize: 10, letterSpacing: 1.4, color: Colors.textMuted,
+    marginTop: Spacing.md, marginBottom: 4,
+  },
   bullet: {
-    fontSize: Typography.size.sm, color: Colors.textSecondary,
-    lineHeight: Typography.size.sm * 1.5, marginBottom: 2,
+    fontSize: Typography.size.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.size.sm * 1.55,
+    marginBottom: 2,
+  },
+  caution: {
+    fontSize: Typography.size.sm,
+    color: Colors.emberSoft,
+    marginTop: Spacing.sm,
+    fontStyle: 'italic',
+    lineHeight: Typography.size.sm * 1.5,
+  },
+  lineTitle: {
+    color: Colors.text,
+    fontWeight: Typography.weight.semibold,
+  },
+  shadowNote: {
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+
+  kvRow: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  kvRowLast: { borderBottomWidth: 0 },
+  kvK: {
+    width: 130,
+    fontSize: Typography.size.sm,
+    color: Colors.textMuted,
+    letterSpacing: 0.3,
+  },
+  kvV: {
+    flex: 1,
+    fontSize: Typography.size.sm,
+    color: Colors.text,
   },
 
   channelRow: {
     flexDirection: 'row',
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
@@ -591,117 +581,101 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     color: Colors.gold,
     fontFamily: Typography.font.serif,
-    width: 56,
+    width: 60,
   },
   channelName: {
     fontSize: Typography.size.md, color: Colors.text,
-    fontWeight: Typography.weight.semibold,
   },
   channelDesc: {
     fontSize: Typography.size.sm, color: Colors.textSecondary,
-    marginTop: 2,
+    marginTop: 2, lineHeight: Typography.size.sm * 1.5,
   },
   channelMeta: {
-    fontSize: 10, color: Colors.textMuted, marginTop: 4, letterSpacing: 0.6,
+    fontSize: 10, color: Colors.textMuted, marginTop: 4, letterSpacing: 0.3,
   },
 
-  tabHelper: {
-    fontSize: Typography.size.sm,
-    color: Colors.textMuted,
-    lineHeight: Typography.size.sm * 1.5,
-    marginBottom: Spacing.md,
-    paddingHorizontal: 4,
-  },
-
-  centerCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+  centerItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   centerHead: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
   },
   centerDot: {
     width: 14, height: 14, borderRadius: 999,
-    borderWidth: 1.4, marginRight: Spacing.md,
+    marginRight: Spacing.md,
+  },
+  centerDotEmpty: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
   },
   centerName: {
     fontSize: Typography.size.md, color: Colors.text,
-    fontWeight: Typography.weight.semibold,
   },
-  centerStatus: {
-    fontSize: 10, letterSpacing: 1.2, marginTop: 2,
-  },
-  centerChev: {
-    fontSize: 22, color: Colors.textMuted, marginLeft: Spacing.md,
+  centerBio: {
+    fontSize: Typography.size.xs, color: Colors.textMuted,
+    marginTop: 2,
   },
   centerBody: {
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    paddingBottom: Spacing.lg,
+    paddingLeft: 26,
   },
-  activationLine: {
+  actLine: {
     fontSize: Typography.size.sm,
     color: Colors.textSecondary,
-    lineHeight: Typography.size.sm * 1.6,
+    lineHeight: Typography.size.sm * 1.55,
+    marginTop: 2,
   },
 
-  gateCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
+  gateItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   gateHead: {
-    flexDirection: 'row', alignItems: 'center', marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md - 2,
   },
   gateDot: {
-    width: 10, height: 10, borderRadius: 999, marginRight: Spacing.sm,
+    width: 8, height: 8, borderRadius: 999,
+    marginRight: Spacing.md,
   },
   gateNum: {
-    fontSize: Typography.size.lg, color: Colors.gold,
-    fontFamily: Typography.font.serif, fontWeight: Typography.weight.bold,
-    width: 32,
+    fontSize: Typography.size.md,
+    color: Colors.gold,
+    fontFamily: Typography.font.serif,
+    width: 40,
   },
   gateName: {
-    flex: 1, fontSize: Typography.size.md, color: Colors.text,
-    fontWeight: Typography.weight.semibold,
+    fontSize: Typography.size.md,
+    color: Colors.text,
   },
-  gateCenter: { fontSize: 16 },
-  gateTheme: {
-    fontSize: Typography.size.sm, color: Colors.textSecondary,
-    marginVertical: 4, lineHeight: Typography.size.sm * 1.5,
+  gateCenterLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
-  gateRow: {
-    flexDirection: 'row', gap: Spacing.md,
-    marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: Colors.divider,
-  },
-  miniLabel: { fontSize: 9, letterSpacing: 1, color: Colors.textMuted },
-  miniValue: { fontSize: Typography.size.xs, color: Colors.text, marginTop: 2 },
-  gateTag: {
-    fontSize: 10, letterSpacing: 1, color: Colors.textMuted,
-    marginTop: Spacing.sm,
+  gateBody: {
+    paddingBottom: Spacing.md,
+    paddingLeft: 56,
   },
 
-  planetTable: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
+  chev: {
+    fontSize: 18, color: Colors.textMuted, marginLeft: Spacing.md,
   },
+
   planetHead: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceElevated,
-    paddingVertical: Spacing.sm,
+    paddingTop: Spacing.md,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
-  planetHeadText: {
+  planetCellHead: {
     fontSize: 10, letterSpacing: 1, color: Colors.textMuted,
-    fontWeight: Typography.weight.semibold,
   },
   planetRow: {
     flexDirection: 'row',
@@ -711,9 +685,9 @@ const styles = StyleSheet.create({
   },
   planetCell: {
     flex: 1,
-    paddingHorizontal: Spacing.sm,
     fontSize: Typography.size.sm,
     color: Colors.text,
+    paddingHorizontal: 4,
   },
   planetGateName: {
     fontSize: 10, color: Colors.textMuted,
