@@ -10,16 +10,18 @@ import { Colors, Typography, Spacing, BorderRadius } from '../theme/colors';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ChartScreen } from '../screens/ChartScreen';
 import { ReportScreen } from '../screens/ReportScreen';
+import { GlossaryScreen } from '../screens/GlossaryScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { useTasarimStore } from '../store/useStore';
 
-export type Tab = 'home' | 'chart' | 'report' | 'profile';
+export type Tab = 'home' | 'chart' | 'report' | 'glossary' | 'profile';
 
 const TABS: { key: Tab; label: string; emoji: string; activeColor: string }[] = [
   { key: 'home', label: 'Bugün', emoji: '🌙', activeColor: Colors.gold },
   { key: 'chart', label: 'Harita', emoji: '✦', activeColor: Colors.purple },
   { key: 'report', label: 'Rapor', emoji: '📜', activeColor: Colors.tealSoft },
+  { key: 'glossary', label: 'Sözlük', emoji: '✦', activeColor: Colors.gold },
   { key: 'profile', label: 'Profil', emoji: '👤', activeColor: Colors.teal },
 ];
 
@@ -44,6 +46,8 @@ export function TabNavigator() {
         return <ChartScreen onNavigate={(t) => setActiveTab(t as Tab)} />;
       case 'report':
         return <ReportScreen onNavigate={(t) => setActiveTab(t as Tab)} />;
+      case 'glossary':
+        return <GlossaryScreen />;
       case 'profile':
         return <ProfileScreen />;
     }
